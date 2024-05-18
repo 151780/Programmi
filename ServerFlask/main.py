@@ -48,7 +48,7 @@ def main():
 @app.route('/menu', methods=['GET'])
 @login_required
 def menu():
-    return redirect("/menu.html")
+    return redirect("/static/menu.html")
 
 ### Grafico pioggia
 @app.route('/rain', methods=['GET'])
@@ -56,7 +56,7 @@ def menu():
 def rainGraph():
     print("Grafico pioggia")
     ds={}
-    return render_template('/rain.html',data=ds)
+    return render_template('/static/rain.html',data=ds)
 
 ### Forecasting pioggia
 @app.route('/forecast', methods=['GET'])
@@ -68,14 +68,14 @@ def forecastGraph():
     #     yp = model.predict([[r[-1][1],r[-2][1],r[-3][1],0]])
     #     r.append([len(r),yp[0]])
     ds={}
-    return render_template('/forecast.html',data=ds)
+    return render_template('/static/forecast.html',data=ds)
 
 ### Comando tende
 @app.route('/controls', methods=['GET'])
 @login_required
 def controls():
     print("Controlli")
-    return redirect('/controls.html')
+    return redirect('/static/controls.html')
 
 ### Ricezione dati da Raspberry
 @app.route('/raspberry',methods=['POST'])
@@ -134,14 +134,14 @@ def login():
 
     if username in usersDB and password == usersDB[username]:
         login_user(User(username))
-        return redirect('/menu.html')
-    return redirect('/login.html')
+        return redirect('/static/menu.html')
+    return redirect('/static/login.html')
 
 ### Logout utente ###
 @app.route('/logout')
 def logout():
     logout_user()
-    return redirect('/index.html')
+    return redirect('/static/index.html')
 
 
 
