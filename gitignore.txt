@@ -1,0 +1,5 @@
+Server flask/credentials.json
+Server flask/mainMamei.py
+Server flask/secret.py
+Chatbot/secret.py
+Raspberry/secret.py
