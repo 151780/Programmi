@@ -80,11 +80,11 @@ def controls():
 ### Ricezione dati da Raspberry
 @app.route('/raspberry', methods=['POST'])
 def raspberryData():
-    sampleData = request.get_json()
-    stationID = sampleData["stationID"]
-    sampleTime = sampleData["sampleTime"]
-    sampleValues = sampleData["sampleValues"]
-    saveDataToDB(stationID,sampleTime,sampleValues)
+    sampleData = request.values
+    stationID = request.values["stationID"]
+    sampleTime = request.values["sampleTime"]
+    sampleRain = request.values["sampleRain"]
+    saveDataToDB(stationID,sampleTime,sampleRain)
     return "ok", 200
 
 ### Richiesta dati operazioni da Raspberry
@@ -94,17 +94,18 @@ def raspberryInform():
     return jsonify(dataFromDB)
 
 ### Salvataggio dati sensori su Firestore
-def saveDataToDB(stID,sTime,sVal):
+def saveDataToDB(stID,sTime,sRain):
     print("salvataggio dati")
     print("stID: ",stID)
     print("sTime: ",sTime)
-    print("sVal: ",sVal)
+    print("sRain: ",sRain)
     sensColl = meteoStationDB.collection(collMeteo)                 # apertura collezione
     # sTimeStr = sTime.strftime("%Y/%m/%d-%H:%M:%S")                  # preparo ID documento da scrivere come ID stazione concatenato con dataora
     docID = stID + sTime
-    docVal = {sensorKey:sVal[sensorKey] for sensorKey in sVal.keys()}  # spacchetto i dati dei sensori per renderli più fruibili nelle query
+    docVal={}
     docVal["stationID"] = stID                                      # aggiungo ID stazione
     docVal["sampleTime"] = sTime                                    # aggiungo dataora rilevazione
+    docVal["rain"] = sRain                                          # aggiungo pioggia
 
     docRef = sensColl.document(docID)                               # imposto il documento
     docRef.set(docVal)                                              # e lo scrivo
