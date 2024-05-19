@@ -95,6 +95,9 @@ def raspberryInform():
 ### Salvataggio dati sensori su Firestore
 def saveDataToDB(stID,sTime,sVal):
     print("salvataggio dati")
+    print("stID: ",stID)
+    print("sTime: ",sTime)
+    print("sVal: ",sVal)
     sensColl = meteoStationDB.collection(collMeteo)                 # apertura collezione
     # sTimeStr = sTime.strftime("%Y/%m/%d-%H:%M:%S")                  # preparo ID documento da scrivere come ID stazione concatenato con dataora
     docID = stID + sTime
