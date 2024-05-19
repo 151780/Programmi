@@ -35,7 +35,7 @@ dbName = 'db151780'
 collUsers = 'Users'
 collMeteo = 'MeteoData'
 meteoStationDB = firestore.Client.from_service_account_json('credentials.json', database=dbName)
-# db = firestore.Client(database=db)
+# db = firestore.Client(database=dbName)
 usersDB = {}
 
 
@@ -78,32 +78,34 @@ def controls():
     return redirect('/static/controls.html')
 
 ### Ricezione dati da Raspberry
-@app.route('/raspberry',methods=['POST'])
+@app.route('/raspberry', methods=['POST'])
 def raspberryData():
-    stationID = request.values['stationID']
-    sensorValues = request.values['sensorValues']
-    saveDataToDB()
+    stationID = request.values["stationID"]
+    sampleTime = request.values["sampleTime"]
+    sampleValues = request.values["sampleValues"]
+    saveDataToDB(stationID,sampleTime,sampleValues)
     return "ok", 200
 
-### Richiesta dati da Raspberry
-@app.route('/raspberry',methods=['GET'])
+### Richiesta dati operazioni da Raspberry
+@app.route('/raspberry', methods=['GET'])
 def raspberryInform():
     dataFromDB = getDataFromDB()
     return jsonify(dataFromDB)
 
-### Salvataggio dati su Firestore
-def saveDataToDB():
+### Salvataggio dati sensori su Firestore
+def saveDataToDB(stID,sTime,sVal):
     print("salvataggio dati")
+    sensColl = meteoStationDB.collection(collMeteo)                 # apertura collezione
+    sTimeStr = sTime.strftime("%Y/%m/%D-%H:%M:%S")                  # preparo ID documento da scrivere come ID stazione concatenato con dataora
+    docID = stID + sTimeStr
+    docVal = {sensorKey:sensorVal for sensorKey,sensorVal in sVal}  # spacchetto i dati dei sensori per renderli più fruibili nelle query
+    docVal["stationID"] = stID                                      # aggiungo ID stazione
+    docVal["sampleTime"] = sTime                                    # aggiungo dataora rilevazione
 
-    # doc_ref = db.collection(coll).document(s)
-    # if doc_ref.get().exists:
-    #     # update
-    #     diz = doc_ref.get().to_dict()['values']
-    #     diz[data] = val
-    #     doc_ref.update({'values': diz})
-    # else:
-    #     doc_ref.set({'values': {data:val}})    
-    return 'ok',200
+    docRef = sensColl.document(docID)                               # imposto il documento
+    docRef.set(docVal)                                              # e lo scrivo
+   
+    return 'Data saved',200
 
 ### Acquisizione dati da Firestore
 def getDataFromDB():
