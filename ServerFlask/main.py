@@ -98,7 +98,7 @@ def saveDataToDB(stID,sTime,sVal):
     sensColl = meteoStationDB.collection(collMeteo)                 # apertura collezione
     # sTimeStr = sTime.strftime("%Y/%m/%d-%H:%M:%S")                  # preparo ID documento da scrivere come ID stazione concatenato con dataora
     docID = stID + sTime
-    docVal = {sensorKey:sensorVal for sensorKey,sensorVal in sVal}  # spacchetto i dati dei sensori per renderli più fruibili nelle query
+    docVal = {sensorKey:sVal[sensorKey] for sensorKey in sVal.keys()}  # spacchetto i dati dei sensori per renderli più fruibili nelle query
     docVal["stationID"] = stID                                      # aggiungo ID stazione
     docVal["sampleTime"] = sTime                                    # aggiungo dataora rilevazione
 
