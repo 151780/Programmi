@@ -80,7 +80,6 @@ def controls():
 ### Ricezione dati da Raspberry
 @app.route('/raspberry', methods=['POST'])
 def raspberryData():
-    sampleData = request.values
     stationID = request.values["stationID"]
     sampleTime = request.values["sampleTime"]
     sampleRain = request.values["sampleRain"]
