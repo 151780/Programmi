@@ -3,6 +3,7 @@ from flask_login import LoginManager, current_user, login_user, logout_user, log
 from secret import secret_key
 from google.cloud import firestore
 from joblib import load
+import time
 
 # i nomi delle finestre sono:
 # index
@@ -96,7 +97,7 @@ def raspberryInform():
 def saveDataToDB(stID,sTime,sVal):
     print("salvataggio dati")
     sensColl = meteoStationDB.collection(collMeteo)                 # apertura collezione
-    sTimeStr = sTime.strftime("%Y/%m/%D-%H:%M:%S")                  # preparo ID documento da scrivere come ID stazione concatenato con dataora
+    sTimeStr = sTime.strftime("%Y/%m/%d-%H:%M:%S")                  # preparo ID documento da scrivere come ID stazione concatenato con dataora
     docID = stID + sTimeStr
     docVal = {sensorKey:sensorVal for sensorKey,sensorVal in sVal}  # spacchetto i dati dei sensori per renderli più fruibili nelle query
     docVal["stationID"] = stID                                      # aggiungo ID stazione
