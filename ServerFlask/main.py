@@ -83,9 +83,19 @@ def raspberryData():
     print("SONO QUI")
     stationID = request.values["stationID"]
     sTime = request.values["sampleTime"]
-    rainValue = float(request.values["rain"])
-    print(stationID,sTime,rainValue)
-    saveDataToDB(stationID,sTime,rainValue)
+    temperatureValue = float(request.values["temperature"])
+    humidityValue = float(request.values["humidity"])
+    pressureValue = float(request.values["pressure"])
+    lightingValue = float(request.values["lighting"])
+    rainfallValue = float(request.values["rainfall"])
+   
+    print(stationID,sTime)
+    print("T = ",temperatureValue)
+    print("H = ",humidityValue)
+    print("P = ",pressureValue)
+    print("L = ",lightingValue)
+    print("R = ",rainfallValue)
+    saveDataToDB(stationID,sTime,temperatureValue,humidityValue,pressureValue,lightingValue,rainfallValue)
     return "ok", 200
 
 ### Richiesta dati operazioni da Raspberry
@@ -95,11 +105,8 @@ def raspberryInform():
     return jsonify(dataFromDB)
 
 ### Salvataggio dati sensori su Firestore
-def saveDataToDB(stID,sTime,sRain):
+def saveDataToDB(stID,sTime,sTemp,sHum,sPress,sLight,sRain):
     print("salvataggio dati")
-    print("stID: ",stID)
-    print("sTime: ",sTime)
-    print("sRain: ",sRain)
     # sensColl = meteoStationDB.collection(collMeteo)                 # apertura collezione
     # sTimeStr = sTime.strftime("%Y/%m/%d-%H:%M:%S")                  # preparo ID documento da scrivere come ID stazione concatenato con dataora
     docID = stID + sTime
@@ -107,6 +114,10 @@ def saveDataToDB(stID,sTime,sRain):
     docVal={}
     docVal["stationID"] = stID                                      # aggiungo ID stazione
     docVal["sampleTime"] = sTime                                    # aggiungo dataora rilevazione
+    docVal["temperature"] = sTemp                                          # aggiungo pioggia
+    docVal["humidity"] = sHum                                          # aggiungo pioggia
+    docVal["pressure"] = sPress                                          # aggiungo pioggia
+    docVal["lighting"] = sLight                                          # aggiungo pioggia
     docVal["rain"] = sRain                                          # aggiungo pioggia
     print("docVal: ",docVal)
 

@@ -7,7 +7,8 @@ import adafruit_ads1x15.ads1015 as ADS
 from adafruit_ads1x15.analog_in import AnalogIn
 import bmp180
 import adafruit_dht
-import requests
+from requests import post, get
+from datetime import datetime
 from secret import bot_token, chat_id
 
 ############ ACQUISIZIONE DHT11
@@ -113,6 +114,26 @@ def getStatus(wStConst):
     temperatureBMP,pressure,altitude,photoResValue,photoResVolt,lighting,rainSensorValue,rainSensorVolt,rainfall = getADS1015_BMP180(i2c,ads,bmp,wStConst)
     print("----------------------------------------")
     print()
+
+    baseURL = 'http://34.154.156.218:80'
+    # baseURL = "http://192.168.1.50:80"
+
+    sTime=datetime.now()
+    print(sTime)
+    sTimeStr = sTime.strftime("%Y-%m-%d-%H:%M:%S")
+    print(sTimeStr)
+
+    dataVal={"stationID":"stazione",
+            "sampleTime":sTimeStr,
+            "temperature":temperatureDHT,
+            "humidity":humidity,
+            "pressure":pressure,
+            "lighting":lighting,
+            "rainfall":rainfall}
+
+    r = post(f'{baseURL}/raspberry',
+                data=dataVal)
+
     
     # segnalo al bot Telegram che sta piovendo
     if rainfall>0 and not itsRaining:
@@ -120,7 +141,7 @@ def getStatus(wStConst):
         botToken = wStConst["botToken"]
         message = "STA PIOVENDO!"
         url = f"https://api.telegram.org/bot{botToken}/sendMessage?chat_id={chatID}&text={message}"
-        requests.get(url).json()
+        get(url).json()
         itsRaining=True
     else:
         itsRaining=False
