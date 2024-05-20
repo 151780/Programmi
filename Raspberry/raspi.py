@@ -125,7 +125,7 @@ def getStatus(wStConst):
 
     dataVal={"stationID":"stazione",
             "sampleTime":sTimeStr,
-            "temperature":temperatureDHT,
+            "temperature":temperatureBMP,
             "humidity":humidity,
             "pressure":pressure,
             "lighting":lighting,
