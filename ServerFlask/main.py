@@ -81,10 +81,12 @@ def controls():
 @app.route('/raspberry', methods=['POST'])
 def raspberryData():
     print("SONO QUI")
-    data = request.values["data"]
-    val = float(request.values["val"])
-    print(data,val)
+    stationID = request.values["stationID"]
+    sTime = request.values["sampleTime"]
+    rainValue = float(request.values["rain"])
+    print(stationID,sTime,rainValue)
     return "ok", 200
+
 # @app.route('/raspberry', methods=['POST'])
 # def raspberryData():
 #     stationID = request.values["stationID"]
