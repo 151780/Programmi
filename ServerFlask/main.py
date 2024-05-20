@@ -142,19 +142,54 @@ def load_user(username):                # ritorno nome utente se in db altriment
 ### Acquisizione dati utenti da Firestore
 def getUsersDB():
     usersList = meteoStationDB.collection(collUsers).stream()
-    usersDB = {user.to_dict()["username"]: user.to_dict()["password"] for user in usersList}
+    usersDB = {user.to_dict()["username"]: {"password": user.to_dict()["password"],
+                                            "email": user.to_dict()["email"]} for user in usersList}
     print(usersDB)
     return usersDB
     
+### Aggiornamento utenti su Firestore on signup
+def updateUsersDB(username,password,email):
+    docVal={}
+    docVal["username"] = username                   # aggiungo username
+    docVal["password"] = password                   # aggiungo password
+    docVal["email"] = email                         # aggiungo email
+    print("docVal: ",docVal)
+
+    docRef = meteoStationDB.collection(collUsers).document()        # imposto il documento
+    docRef.set(docVal)                                              # e lo scrivo
+ 
+    print(usersDB)
+    return usersDB
+    
+### Signup nuovo utente ###
+@app.route('/sign_up', methods=['POST'])
+def signup():
+    if current_user.is_authenticated:
+        return redirect(url_for('/static/menu.html'))
+    username = request.values['username']
+    email = request.values['email']
+    password1 = request.values['password1']
+    password2 = request.values['password2']
+
+    if username in usersDB:
+        return redirect('/static/sign_up.html')
+    if password1 != password2:
+        return redirect('/static/sign_up.html')
+    if email in [valDict["email"] for valDict in usersDB.values()]:
+        return redirect('/static/sign_up.html')
+    
+    updateUsersDB(username,password1,email)
+    return redirect('/static/login.html')
+
 ### Login utente ###
 @app.route('/login', methods=['POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('/menu.html'))
+        return redirect(url_for('/static/menu.html'))
     username = request.values['username']
     password = request.values['password']
 
-    if username in usersDB and password == usersDB[username]:
+    if username in usersDB and password == usersDB[username]["password"]:
         login_user(User(username))
         return redirect('/static/menu.html')
     return redirect('/static/login.html')
