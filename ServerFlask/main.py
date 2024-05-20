@@ -100,15 +100,18 @@ def saveDataToDB(stID,sTime,sRain):
     print("stID: ",stID)
     print("sTime: ",sTime)
     print("sRain: ",sRain)
-    sensColl = meteoStationDB.collection(collMeteo)                 # apertura collezione
+    # sensColl = meteoStationDB.collection(collMeteo)                 # apertura collezione
     # sTimeStr = sTime.strftime("%Y/%m/%d-%H:%M:%S")                  # preparo ID documento da scrivere come ID stazione concatenato con dataora
     docID = stID + sTime
+    print("docID: ",docID)
     docVal={}
     docVal["stationID"] = stID                                      # aggiungo ID stazione
     docVal["sampleTime"] = sTime                                    # aggiungo dataora rilevazione
     docVal["rain"] = sRain                                          # aggiungo pioggia
+    print("docVal: ",docVal)
 
-    docRef = sensColl.document(docID)                               # imposto il documento
+    # docRef = sensColl.document(docID)                               # imposto il documento
+    docRef = meteoStationDB.collection(collMeteo).document(docID)                               # imposto il documento
     docRef.set(docVal)                                              # e lo scrivo
    
     return 'Data saved',200
