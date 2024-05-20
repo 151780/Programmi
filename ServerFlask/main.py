@@ -85,15 +85,8 @@ def raspberryData():
     sTime = request.values["sampleTime"]
     rainValue = float(request.values["rain"])
     print(stationID,sTime,rainValue)
+    saveDataToDB(stationID,sTime,rainValue)
     return "ok", 200
-
-# @app.route('/raspberry', methods=['POST'])
-# def raspberryData():
-#     stationID = request.values["stationID"]
-#     sampleTime = request.values["sampleTime"]
-#     sampleRain = request.values["sampleRain"]
-#     saveDataToDB(stationID,sampleTime,sampleRain)
-#     return "ok", 200
 
 ### Richiesta dati operazioni da Raspberry
 @app.route('/raspberry', methods=['GET'])
