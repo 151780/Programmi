@@ -1,8 +1,8 @@
 from flask import Flask,request,redirect,url_for,render_template,jsonify
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required, UserMixin
 from secret import secret_key
-from google.cloud import firestore
-from joblib import load
+from google.cloud import firestore, storage
+from joblib import load, dump
 import os
 
 # i nomi delle finestre sono:
@@ -71,6 +71,31 @@ def rainGraph():
 @login_required
 def forecastGraph():
     print("Grafico forecast pioggia")
+
+    backwardGap = 10        # indica da quanti passi indietro devo partire per il forecast
+    backwardSamples = 5     # indica quanti campioni devo inserire per forecast
+    forecastPeriods = 100   # indica per quanti periodi devo prevedere il forecast
+    
+    # recupero il modello dal cloud
+    clfName = "rfClass"
+    bucketName = "151780-progetto01"        # definisco il nome del bucket di salvatoaggio in cloud
+    dumpPath=f"./tmp/{clfName}.joblib"      # definisco il path di salvataggio locale del modello
+    blobName = f"{clfName}.joblib"          # definisco il nome del file di salvataggio sul cloud
+
+    if local:
+        csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
+    else:
+        csClient = storage.Client()
+    gcBucket = csClient.bucket(bucketName)      # scelgo il bucket
+    gcBlob = gcBucket.blob(blobName)            # assegno il nome del file di destinazione
+    gcBlob.download_to_filename(dumpPath)       # scarico il file dal cloud    
+
+    rf = load(dumpPath)                         # salvo in locale il modello
+
+    dataFromDB = getDataFromDB(backwardGap,backwardSamples,forecastPeriods)
+
+
+
     # model = load('model.joblib')
     # for i in range(10):
     #     yp = model.predict([[r[-1][1],r[-2][1],r[-3][1],0]])
@@ -88,7 +113,6 @@ def controls():
 ### Ricezione dati da Raspberry
 @app.route('/raspberry', methods=['POST'])
 def raspberryData():
-    print("SONO QUI")
     stationID = request.values["stationID"]
     sTime = request.values["sampleTime"]
     temperatureValue = float(request.values["temperature"])
@@ -106,39 +130,36 @@ def raspberryData():
     saveDataToDB(stationID,sTime,temperatureValue,humidityValue,pressureValue,lightingValue,rainfallValue)
     return "ok", 200
 
-### Richiesta dati operazioni da Raspberry
-@app.route('/raspberry', methods=['GET'])
-def raspberryInform():
-    dataFromDB = getDataFromDB()
-    return jsonify(dataFromDB)
-
 ### Salvataggio dati sensori su Firestore
 def saveDataToDB(stID,sTime,sTemp,sHum,sPress,sLight,sRain):
     print("salvataggio dati")
-    # sensColl = meteoStationDB.collection(collMeteo)                 # apertura collezione
-    # sTimeStr = sTime.strftime("%Y/%m/%d-%H:%M:%S")                  # preparo ID documento da scrivere come ID stazione concatenato con dataora
     docID = stID + sTime
     print("docID: ",docID)
     docVal={}
     docVal["stationID"] = stID                                      # aggiungo ID stazione
     docVal["sampleTime"] = sTime                                    # aggiungo dataora rilevazione
-    docVal["temperature"] = sTemp                                          # aggiungo pioggia
-    docVal["humidity"] = sHum                                          # aggiungo pioggia
-    docVal["pressure"] = sPress                                          # aggiungo pioggia
-    docVal["lighting"] = sLight                                          # aggiungo pioggia
+    docVal["temperature"] = sTemp                                   # aggiungo temperatura
+    docVal["humidity"] = sHum                                       # aggiungo umidità
+    docVal["pressure"] = sPress                                     # aggiungo pressione
+    docVal["lighting"] = sLight                                     # aggiungo illuminazione
     docVal["rain"] = sRain                                          # aggiungo pioggia
     print("docVal: ",docVal)
 
-    # docRef = sensColl.document(docID)                               # imposto il documento
-    docRef = meteoStationDB.collection(collMeteo).document(docID)                               # imposto il documento
+    docRef = meteoStationDB.collection(collMeteo).document(docID)   # imposto il documento
     docRef.set(docVal)                                              # e lo scrivo
    
     return 'Data saved',200
 
 ### Acquisizione dati da Firestore
-def getDataFromDB():
+def getDataFromDB(bGap,bSamples,fPeriods):
     print("lettura dati")
-    return 'ok',200
+    collRef = meteoStationDB.collection(collMeteo)      # definisco la collection da leggere e ne leggo gli ultimi elementi necessari per grafico
+    qForecast = collRef.order_by("sampleTime", direction=firestore.Query.DESCENDING).limit(fPeriods+bGap)
+    meteoList = list(qForecast.stream())                # creo la lista dei documenti da graficare sul forecast
+
+    "pressure","temperature","humidity"
+
+    return meteoList
 
 ### Verifica utente ###
 @login.user_loader                      # carico il nome dell'utente loggato
@@ -155,7 +176,7 @@ def getUsersDB():
     print(usersDB)
     return usersDB
     
-### Aggiornamento utenti su Firestore on signup
+### Aggiornamento utenti su Firestore on signup e aggiornamento DB locale
 def updateUsersDB(username,password,email):
     docVal={}
     docVal["username"] = username                   # aggiungo username
@@ -166,6 +187,7 @@ def updateUsersDB(username,password,email):
     docRef = meteoStationDB.collection(collUsers).document()        # imposto il documento
     docRef.set(docVal)                                              # e lo scrivo
  
+    usersDB[username] = {"password": password,"email": email}
     print(usersDB)
     return usersDB
     
