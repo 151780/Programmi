@@ -35,7 +35,7 @@ dbName = 'db151780'
 collUsers = 'Users'
 collMeteo = 'MeteoData'
 meteoStationDB = firestore.Client.from_service_account_json('credentials.json', database=dbName)
-# db = firestore.Client(database=dbName)
+# meteoStationDB = firestore.Client(database=dbName)
 usersDB = {}
 
 
