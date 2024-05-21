@@ -46,6 +46,30 @@ else:
     meteoStationDB = firestore.Client(database=dbName)
 usersDB = {}
 
+# inizializzazione parametri per forecast
+backwardGap = 10        # indica da quanti passi indietro devo partire per il forecast
+backwardSamples = 5     # indica quanti campioni devo inserire per forecast
+forecastPeriods = 30    # indica per quanti periodi devo prevedere il forecast
+
+#### ACQUISIZIONE MODELLO DA CLOUD ####
+def getModel():
+    # recupero il modello dal cloud
+    clfName = "rfClass"
+    bucketName = "151780-progetto01"        # definisco il nome del bucket di salvatoaggio in cloud
+    dumpPath=f"./tmp/{clfName}.joblib"      # definisco il path di salvataggio locale del modello
+    blobName = f"{clfName}.joblib"          # definisco il nome del file di salvataggio sul cloud
+
+    if local:
+        csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
+    else:
+        csClient = storage.Client()
+    gcBucket = csClient.bucket(bucketName)      # scelgo il bucket
+    gcBlob = gcBucket.blob(blobName)            # assegno il nome del file di destinazione
+    gcBlob.download_to_filename(dumpPath)       # scarico il file dal cloud    
+
+    rf = load(dumpPath)                         # salvo in locale il modello
+    return rf
+
 
 ### Home page
 @app.route('/',methods=['GET'])
@@ -71,30 +95,7 @@ def rainGraph():
 @login_required
 def forecastGraph():
     print("Grafico forecast pioggia")
-
-    backwardGap = 10        # indica da quanti passi indietro devo partire per il forecast
-    backwardSamples = 5     # indica quanti campioni devo inserire per forecast
-    forecastPeriods = 100   # indica per quanti periodi devo prevedere il forecast
-    
-    # recupero il modello dal cloud
-    clfName = "rfClass"
-    bucketName = "151780-progetto01"        # definisco il nome del bucket di salvatoaggio in cloud
-    dumpPath=f"./tmp/{clfName}.joblib"      # definisco il path di salvataggio locale del modello
-    blobName = f"{clfName}.joblib"          # definisco il nome del file di salvataggio sul cloud
-
-    if local:
-        csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
-    else:
-        csClient = storage.Client()
-    gcBucket = csClient.bucket(bucketName)      # scelgo il bucket
-    gcBlob = gcBucket.blob(blobName)            # assegno il nome del file di destinazione
-    gcBlob.download_to_filename(dumpPath)       # scarico il file dal cloud    
-
-    rf = load(dumpPath)                         # salvo in locale il modello
-
     dataFromDB = getDataFromDB(backwardGap,backwardSamples,forecastPeriods)
-
-
 
     # model = load('model.joblib')
     # for i in range(10):
@@ -102,6 +103,16 @@ def forecastGraph():
     #     r.append([len(r),yp[0]])
     ds={}
     return render_template('/static/forecast.html',data=ds)
+
+### Acquisizione dati meteo da Firestore
+def getDataFromDB(bGap,bSamples,fPeriods):
+    print("lettura dati")
+    collRef = meteoStationDB.collection(collMeteo)      # definisco la collection da leggere e ne leggo gli ultimi elementi necessari per grafico
+    qForecast = collRef.order_by("sampleTime", direction=firestore.Query.DESCENDING).limit(bSamples+bGap)
+    meteoList = list(qForecast.stream())                # creo la lista dei documenti da graficare sul forecast
+
+    # "pressure","temperature","humidity"
+    return meteoList
 
 ### Comando tende
 @app.route('/controls', methods=['GET'])
@@ -121,6 +132,25 @@ def raspberryData():
     lightingValue = float(request.values["lighting"])
     rainfallValue = float(request.values["rainfall"])
    
+    collRef = meteoStationDB.collection(collMeteo)      # definisco la collection da leggere e ne leggo gli ultimi elementi necessari per grafico
+    qForecast = collRef.order_by("sampleTime", direction=firestore.Query.DESCENDING).limit(backwardSamples-1)
+    meteoList = list(qForecast.stream())                # creo la lista dei documenti che servono per fare il forecast
+    meteoList.reverse()                                 # e faccio il reverse per avere come primo il meno recente
+    featureColList=["pressure","temperature","humidity"]
+    if len(meteoList)>=backwardSamples-1:               # se ho sufficienti dati per fare il forecast
+        forecastData = []                               # costruisco l'esempio
+        for sampleDoc in meteoList:                     # per ogni esempio acquisito
+            sampleData = sampleDoc.to_dict()
+            for feat in featureColList:                 # per ogni feature
+                forecastData.append(sampleData[feat])   # appendo alla lista dati
+        forecastData.append(pressureValue)              # e infine aggiungo i dati appena raccolti
+        forecastData.append(temperatureValue)
+        forecastData.append(humidityValue)
+
+        rainForecast=rfModel.predict(forecastData)      # predico la pioggia
+    else:
+        rainForecast=0
+
     print(stationID,sTime)
     print("T = ",temperatureValue)
     print("H = ",humidityValue)
@@ -149,17 +179,6 @@ def saveDataToDB(stID,sTime,sTemp,sHum,sPress,sLight,sRain):
     docRef.set(docVal)                                              # e lo scrivo
    
     return 'Data saved',200
-
-### Acquisizione dati da Firestore
-def getDataFromDB(bGap,bSamples,fPeriods):
-    print("lettura dati")
-    collRef = meteoStationDB.collection(collMeteo)      # definisco la collection da leggere e ne leggo gli ultimi elementi necessari per grafico
-    qForecast = collRef.order_by("sampleTime", direction=firestore.Query.DESCENDING).limit(fPeriods+bGap)
-    meteoList = list(qForecast.stream())                # creo la lista dei documenti da graficare sul forecast
-
-    "pressure","temperature","humidity"
-
-    return meteoList
 
 ### Verifica utente ###
 @login.user_loader                      # carico il nome dell'utente loggato
@@ -234,5 +253,6 @@ def logout():
 
 if __name__ == '__main__':
     usersDB=getUsersDB()
+    rfModel = getModel()            # variabile contenente il modello di forecasting
     app.run(host='0.0.0.0', port=80, debug=False)
 

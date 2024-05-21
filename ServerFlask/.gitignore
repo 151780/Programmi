@@ -2,5 +2,6 @@ credentials.json
 mainMamei.py
 secret.py
 TestPost.py
+TestForecast.py
 istruzioniLancio.txt
 .gitignore
