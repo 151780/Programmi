@@ -3,6 +3,7 @@ from flask_login import LoginManager, current_user, login_user, logout_user, log
 from secret import secret_key
 from google.cloud import firestore
 from joblib import load
+import os
 
 # i nomi delle finestre sono:
 # index
@@ -30,12 +31,19 @@ app.config['SECRET_KEY'] = secret_key
 login = LoginManager(app)
 login.login_view = '/login.html'
 
+# verifico se sono in locale o in cloud
+if os.path.isfile("./credentials.json"):
+    local = True
+else:
+    local = False
 # apertura connessione DB Firestore
 dbName = 'db151780'
 collUsers = 'Users'
 collMeteo = 'MeteoData'
-meteoStationDB = firestore.Client.from_service_account_json('credentials.json', database=dbName)
-# meteoStationDB = firestore.Client(database=dbName)
+if local:
+    meteoStationDB = firestore.Client.from_service_account_json('credentials.json', database=dbName)
+else:
+    meteoStationDB = firestore.Client(database=dbName)
 usersDB = {}
 
 

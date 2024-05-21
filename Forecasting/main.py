@@ -2,11 +2,14 @@ import pandas as pd
 from sklearn.metrics import mean_absolute_error
 from joblib import dump, load
 from google.cloud import firestore, storage
+import os
 
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, RandomForestRegressor
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, classification_report
+
+
 
 def trainRetrain(event, context):
     backwardGap = 10        # indica da quanti passi indietro devo partire per il forecast
@@ -14,11 +17,22 @@ def trainRetrain(event, context):
                             # es:   se backwardGap = 10 e backwardSamples = 5
                             #       considero per il forecast a t le rilevazioni da t-10 a t-6
 
+    if os.path.isfile("./credentials.json"):
+        local = True
+    else:
+        local = False
+    
     # apertura connessione DB Firestore
     dbName = 'db151780'
     collMeteo = 'MeteoData'
-    meteoStationDB = firestore.Client.from_service_account_json('credentials.json', database=dbName)
-    # meteoStationDB = firestore.Client(database=dbName)
+    if local:
+        print("Local")
+        input()
+        meteoStationDB = firestore.Client.from_service_account_json('credentials.json', database=dbName)
+    else:
+        print("Remote")
+        input()
+        meteoStationDB = firestore.Client(database=dbName)
 
     collRef = meteoStationDB.collection(collMeteo)  # acquisisco tutta la collezione dei dati meteo
     docsMeteoData = collRef.stream()
@@ -77,8 +91,10 @@ def trainRetrain(event, context):
 
     dump(rf, dumpPath)                      # salvo in locale il modello
 
-    csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
-    # csClient = storage.Client()
+    if local:
+        csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
+    else:
+        csClient = storage.Client()
     gcBucket = csClient.bucket(bucketName)      # scelgo il bucket
     gcBlob = gcBucket.blob(blobName)            # assegno il nome del file di destinazione
     gcBlob.upload_from_filename(dumpPath)       # carico il file sul cloud

@@ -1,5 +1,6 @@
-flask
+pandas
+scikit-learn
+joblib
 google-cloud-firestore
 google-cloud-storage
-time
 os
