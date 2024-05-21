@@ -62,7 +62,7 @@ def trainRetrain(event, context):
     y_pred=rf.predict(X_test)           # effettuo predizione
 
     # stampo statistiche del classificatore
-    print("--> CLASSIFICATORE ")        
+    print("--> CLASSIFICATORE RANDOM FOREST ")        
     print()
     print(confusion_matrix(y_test, y_pred))
     print()
