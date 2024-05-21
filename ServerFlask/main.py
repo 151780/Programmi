@@ -48,7 +48,7 @@ usersDB = {}
 
 # inizializzazione parametri per forecast
 backwardGap = 10        # indica da quanti passi indietro devo partire per il forecast
-backwardSamples = 5     # indica quanti campioni devo inserire per forecast
+backwardSamples = 1     # indica quanti campioni devo inserire per forecast
 forecastPeriods = 30    # indica per quanti periodi devo prevedere il forecast
 
 #### ACQUISIZIONE MODELLO DA CLOUD ####
@@ -133,21 +133,17 @@ def raspberryData():
     rainfallValue = float(request.values["rainfall"])
    
     collRef = meteoStationDB.collection(collMeteo)      # definisco la collection da leggere e ne leggo gli ultimi elementi necessari per grafico
-    qForecast = collRef.order_by("sampleTime", direction=firestore.Query.DESCENDING).limit(backwardSamples-1)
+    qForecast = collRef.order_by("sampleTime", direction=firestore.Query.DESCENDING).limit(backwardSamples)
     meteoList = list(qForecast.stream())                # creo la lista dei documenti che servono per fare il forecast
-    meteoList.reverse()                                 # e faccio il reverse per avere come primo il meno recente
-    featureColList=["pressure","temperature","humidity"]
-    if len(meteoList)>=backwardSamples-1:               # se ho sufficienti dati per fare il forecast
-        forecastData = []                               # costruisco l'esempio
+    featureColList=["humidity","pressure","temperature"]
+    if len(meteoList)>=backwardSamples:               # se ho sufficienti dati per fare il forecast
+        forecastData = [[]]                               # costruisco l'esempio
         for sampleDoc in meteoList:                     # per ogni esempio acquisito
             sampleData = sampleDoc.to_dict()
             for feat in featureColList:                 # per ogni feature
-                forecastData.append(sampleData[feat])   # appendo alla lista dati
-        forecastData.append(pressureValue)              # e infine aggiungo i dati appena raccolti
-        forecastData.append(temperatureValue)
-        forecastData.append(humidityValue)
+                forecastData[0].append(sampleData[feat])   # appendo alla lista dati
 
-        rainForecast=rfModel.predict(forecastData)      # predico la pioggia
+        rainForecast=rfModel.predict(forecastData)[0]      # predico la pioggia
     else:
         rainForecast=0
 
@@ -157,11 +153,11 @@ def raspberryData():
     print("P = ",pressureValue)
     print("L = ",lightingValue)
     print("R = ",rainfallValue)
-    saveDataToDB(stationID,sTime,temperatureValue,humidityValue,pressureValue,lightingValue,rainfallValue)
+    saveDataToDB(stationID,sTime,temperatureValue,humidityValue,pressureValue,lightingValue,rainfallValue,rainForecast)
     return "ok", 200
 
 ### Salvataggio dati sensori su Firestore
-def saveDataToDB(stID,sTime,sTemp,sHum,sPress,sLight,sRain):
+def saveDataToDB(stID,sTime,sTemp,sHum,sPress,sLight,sRain,fRain):
     print("salvataggio dati")
     docID = stID + sTime
     print("docID: ",docID)
@@ -173,6 +169,7 @@ def saveDataToDB(stID,sTime,sTemp,sHum,sPress,sLight,sRain):
     docVal["pressure"] = sPress                                     # aggiungo pressione
     docVal["lighting"] = sLight                                     # aggiungo illuminazione
     docVal["rain"] = sRain                                          # aggiungo pioggia
+    docVal[f"rain{backwardGap}"] = fRain                            # aggiungo forecast pioggia
     print("docVal: ",docVal)
 
     docRef = meteoStationDB.collection(collMeteo).document(docID)   # imposto il documento

@@ -13,7 +13,7 @@ from sklearn.metrics import confusion_matrix, classification_report
 
 def trainRetrain(event, context):
     backwardGap = 10        # indica da quanti passi indietro devo partire per il forecast
-    backwardSamples = 5     # indica quanti campioni devo inserire per forecast
+    backwardSamples = 1     # indica quanti campioni devo inserire per forecast
                             # es:   se backwardGap = 10 e backwardSamples = 5
                             #       considero per il forecast a t le rilevazioni da t-10 a t-6
 
@@ -26,12 +26,8 @@ def trainRetrain(event, context):
     dbName = 'db151780'
     collMeteo = 'MeteoData'
     if local:
-        print("Local")
-        input()
         meteoStationDB = firestore.Client.from_service_account_json('credentials.json', database=dbName)
     else:
-        print("Remote")
-        input()
         meteoStationDB = firestore.Client(database=dbName)
 
     collRef = meteoStationDB.collection(collMeteo)  # acquisisco tutta la collezione dei dati meteo
@@ -41,18 +37,21 @@ def trainRetrain(event, context):
         meteoDataList.append(docMD.to_dict())
     meteoDatadf = pd.DataFrame(meteoDataList)
 
-    featureColList=["pressure","temperature","humidity"]    # definisco le feature su cui basare il forecast
+    featureColList=["humidity","pressure","temperature"]    # definisco le feature su cui basare il forecast
 
     for i in range(1,backwardSamples+1):                    # costruisco le feature del passato
         for col in featureColList:
-            meteoDatadf[f"{col}_{i}"]=meteoDatadf[col].shift(backwardGap)
+            meteoDatadf[f"{col}_{i}"]=meteoDatadf[col].shift(i)
 
     meteoDatadf["rainBool"]=(meteoDatadf["rain"]>0)         # aggiungo la colonna booleana che indica se piove o meno
 
-    columnToRemove=["sampleTime","lighting","rain","stationID"]     # definisco le colonne che non servono per il forecast
+    columnToRemove=["humidity","pressure","temperature","sampleTime","lighting","rain",f"rain{backwardGap}","stationID"]     # definisco le colonne che non servono per il forecast
     meteoDatadf = meteoDatadf.drop(columns=columnToRemove)          # e le rimuovo
     meteoDatadf = meteoDatadf.iloc[backwardGap:]                    # rimuovo le prime righe che non hanno colonne valide per forecast
+
     print(meteoDatadf)
+    # input()
+
 
     # Creo classificatore
     rs=None     # random state per test
@@ -61,8 +60,8 @@ def trainRetrain(event, context):
     y = meteoDatadf["rainBool"]                     # creo i termini noti
 
     # divido il dataframe in train test validation
-    X_trainval, X_test, y_trainval, y_test = train_test_split(X, y, test_size=0.2, random_state=rs)
-    X_train, X_val, y_train, y_val = train_test_split(X_trainval, y_trainval, test_size=0.2, random_state=rs)
+    X_trainval, X_test, y_trainval, y_test = train_test_split(X, y, test_size=0.3, random_state=rs)
+    X_train, X_val, y_train, y_val = train_test_split(X_trainval, y_trainval, test_size=0.3, random_state=rs)
     # normalizzo con MinMax
     scaler=MinMaxScaler()
     X_train=scaler.fit_transform(X_train)
@@ -74,6 +73,7 @@ def trainRetrain(event, context):
     rf.fit(X_trainval, y_trainval)      # creo il modello
 
     y_pred=rf.predict(X_test)           # effettuo predizione
+    print(y_pred)
 
     # stampo statistiche del classificatore
     print("--> CLASSIFICATORE RANDOM FOREST ")        
