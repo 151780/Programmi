@@ -70,7 +70,6 @@ def getModel():
     rf = load(dumpPath)                         # salvo in locale il modello
     return rf
 
-
 ### Home page
 @app.route('/',methods=['GET'])
 def main():
@@ -82,11 +81,28 @@ def main():
 def menu():
     return redirect("/static/menu.html")
 
+### Acquisisci dati dal DB per grafici
+def getGraphData(atmoEv):
+    collRef = meteoStationDB.collection(collMeteo)      # definisco la collection da leggere e ne leggo gli ultimi elementi necessari per grafico
+    qForecast = collRef.order_by("sampleTime", direction=firestore.Query.DESCENDING).limit(forecastPeriods+backwardSamples)
+    meteoList = list(qForecast.stream())                # creo la lista dei documenti da graficare sul forecast
+    meteoList.reverse()                                 # inverto la lista perchè ero in descending
+    dOra=[]                                          # inizializzo le liste dei dati
+    aEvent=[]
+
+    for sampleMeteo in meteoList:                       # per ogni documento nella collezione
+        sampleDict = sampleMeteo.to_dict()              # appendo il valore alla lista corrispondente
+        dOra.append(sampleDict["sampleTime"])
+        aEvent.append(sampleDict[atmoEv])
+   
+    return dOra, aEvent
+
 ### Grafico pioggia
 @app.route('/rain', methods=['GET'])
 @login_required
 def rainGraph():
     print("Grafico pioggia")
+    dataOra, atmoEvent = getGraphData("rain")
     ds={}
     return render_template('/static/rain.html',data=ds)
 
@@ -95,24 +111,25 @@ def rainGraph():
 @login_required
 def forecastGraph():
     print("Grafico forecast pioggia")
-    dataFromDB = getDataFromDB(backwardGap,backwardSamples,forecastPeriods)
+    collRef = meteoStationDB.collection(collMeteo)      # definisco la collection da leggere e ne leggo gli ultimi elementi necessari per grafico
+    qForecast = collRef.order_by("sampleTime", direction=firestore.Query.DESCENDING).limit(forecastPeriods+backwardSamples)
+    meteoList = list(qForecast.stream())                # creo la lista dei documenti da graficare sul forecast
+    meteoList.reverse()                                 # inverto la lista perchè ero in descending
+    ascisse=[]                                          # inizializzo le liste dei dati
+    pioggiaPrevista=[]
+    pioggiaReale=[]
 
-    # model = load('model.joblib')
-    # for i in range(10):
-    #     yp = model.predict([[r[-1][1],r[-2][1],r[-3][1],0]])
-    #     r.append([len(r),yp[0]])
+    for sampleMeteo in meteoList:                       # per ogni documento nella collezione
+        sampleDict = sampleMeteo.to_dict()              # appendo il valore alla lista corrispondente
+        ascisse.append(sampleDict["sampleTime"])
+        pioggiaReale.append(sampleDict["rain"]>0)
+        pioggiaPrevista.append(sampleDict[f"rain{backwardGap}"])
+    ascisse.pop(0)                                      # faccio in modo che la previsione sia allineata al giorno corretto
+    pioggiaReale.pop(0)
+    pioggiaPrevista.pop(-1)
+
     ds={}
     return render_template('/static/forecast.html',data=ds)
-
-### Acquisizione dati meteo da Firestore
-def getDataFromDB(bGap,bSamples,fPeriods):
-    print("lettura dati")
-    collRef = meteoStationDB.collection(collMeteo)      # definisco la collection da leggere e ne leggo gli ultimi elementi necessari per grafico
-    qForecast = collRef.order_by("sampleTime", direction=firestore.Query.DESCENDING).limit(bSamples+bGap)
-    meteoList = list(qForecast.stream())                # creo la lista dei documenti da graficare sul forecast
-
-    # "pressure","temperature","humidity"
-    return meteoList
 
 ### Comando tende
 @app.route('/controls', methods=['GET'])
@@ -132,18 +149,18 @@ def raspberryData():
     lightingValue = float(request.values["lighting"])
     rainfallValue = float(request.values["rainfall"])
    
-    collRef = meteoStationDB.collection(collMeteo)      # definisco la collection da leggere e ne leggo gli ultimi elementi necessari per grafico
+    collRef = meteoStationDB.collection(collMeteo)          # definisco la collection da leggere e ne leggo gli ultimi elementi necessari per grafico
     qForecast = collRef.order_by("sampleTime", direction=firestore.Query.DESCENDING).limit(backwardSamples)
-    meteoList = list(qForecast.stream())                # creo la lista dei documenti che servono per fare il forecast
+    meteoList = list(qForecast.stream())                    # creo la lista dei documenti che servono per fare il forecast
     featureColList=["humidity","pressure","temperature"]
-    if len(meteoList)>=backwardSamples:               # se ho sufficienti dati per fare il forecast
-        forecastData = [[]]                               # costruisco l'esempio
-        for sampleDoc in meteoList:                     # per ogni esempio acquisito
+    if len(meteoList)>=backwardSamples:                     # se ho sufficienti dati per fare il forecast
+        forecastData = [[]]                                 # costruisco l'esempio
+        for sampleDoc in meteoList:                         # per ogni esempio acquisito
             sampleData = sampleDoc.to_dict()
-            for feat in featureColList:                 # per ogni feature
-                forecastData[0].append(sampleData[feat])   # appendo alla lista dati
+            for feat in featureColList:                     # per ogni feature
+                forecastData[0].append(sampleData[feat])    # appendo alla lista dati
 
-        rainForecast=rfModel.predict(forecastData)[0]      # predico la pioggia
+        rainForecast=rfModel.predict(forecastData)[0]       # predico la pioggia
     else:
         rainForecast=0
 
