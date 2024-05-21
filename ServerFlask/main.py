@@ -138,7 +138,7 @@ def controls():
     print("Controlli")
     return redirect('/static/controls.html')
 
-### Ricezione dati da Raspberry
+### Richiesta dati da Telegram
 @app.route('/chatbot', methods=['POST'])
 def chatbotData():
     atmoEventRequested = request.values["atmoEventRequested"]

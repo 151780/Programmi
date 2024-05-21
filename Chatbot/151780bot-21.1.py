@@ -74,7 +74,7 @@ async def answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 def rain(a,b):
-    r = post(baseURL,"rain")            # chiamo il server per acquisire i dati dell'ultima rilevazione
+    r = post(f'{baseURL}/chatbot',data={"atmoEventRequested":"rain"})    # chiamo il server per acquisire i dati dell'ultima rilevazione
     valoreFunzione=r
     print(valoreFunzione)
     return valoreFunzione
