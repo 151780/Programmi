@@ -11,6 +11,11 @@ from requests import post, get
 from datetime import datetime
 from secret import bot_token, chat_id
 
+from vmURL import baseURL
+# baseURL = 'http://34.154.156.218:80'
+# baseURL = "http://192.168.1.50:80"
+
+
 ############ ACQUISIZIONE DHT11
 def getDHT11(dht11,wStConst):
     # ciclo di lettura del sensore - ripeto finchè non ho un dato o per maxTry tentativi
@@ -115,8 +120,6 @@ def getStatus(wStConst):
     print("----------------------------------------")
     print()
 
-    baseURL = 'http://34.154.156.218:80'
-    # baseURL = "http://192.168.1.50:80"
 
     sTime=datetime.now()
     print(sTime)

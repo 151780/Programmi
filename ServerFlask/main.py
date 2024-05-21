@@ -49,7 +49,7 @@ usersDB = {}
 # inizializzazione parametri per forecast
 backwardGap = 10        # indica da quanti passi indietro devo partire per il forecast
 backwardSamples = 1     # indica quanti campioni devo inserire per forecast
-forecastPeriods = 30    # indica per quanti periodi devo prevedere il forecast
+showPeriods = 30    # indica per quanti periodi devo prevedere il forecast
 
 #### ACQUISIZIONE MODELLO DA CLOUD ####
 def getModel():
@@ -70,21 +70,10 @@ def getModel():
     rf = load(dumpPath)                         # salvo in locale il modello
     return rf
 
-### Home page
-@app.route('/',methods=['GET'])
-def main():
-    return redirect("/static/index.html")
-
-### Menu generale
-@app.route('/menu', methods=['GET'])
-@login_required
-def menu():
-    return redirect("/static/menu.html")
-
-### Acquisisci dati dal DB per grafici
-def getGraphData(atmoEv):
+### ACQUSIZIONE DATI DAL DB PER GRAFICI
+def getDBData(atmoEv,sPer):
     collRef = meteoStationDB.collection(collMeteo)      # definisco la collection da leggere e ne leggo gli ultimi elementi necessari per grafico
-    qForecast = collRef.order_by("sampleTime", direction=firestore.Query.DESCENDING).limit(forecastPeriods+backwardSamples)
+    qForecast = collRef.order_by("sampleTime", direction=firestore.Query.DESCENDING).limit(sPer)
     meteoList = list(qForecast.stream())                # creo la lista dei documenti da graficare sul forecast
     meteoList.reverse()                                 # inverto la lista perchè ero in descending
     dOra=[]                                          # inizializzo le liste dei dati
@@ -97,12 +86,23 @@ def getGraphData(atmoEv):
    
     return dOra, aEvent
 
+### Home page
+@app.route('/',methods=['GET'])
+def main():
+    return redirect("/static/index.html")
+
+### Menu generale
+@app.route('/menu', methods=['GET'])
+@login_required
+def menu():
+    return redirect("/static/menu.html")
+
 ### Grafico pioggia
 @app.route('/rain', methods=['GET'])
 @login_required
 def rainGraph():
     print("Grafico pioggia")
-    dataOra, atmoEvent = getGraphData("rain")
+    dataOra, atmoEvent = getDBData("rain",showPeriods)
     ds={}
     return render_template('/static/rain.html',data=ds)
 
@@ -112,7 +112,7 @@ def rainGraph():
 def forecastGraph():
     print("Grafico forecast pioggia")
     collRef = meteoStationDB.collection(collMeteo)      # definisco la collection da leggere e ne leggo gli ultimi elementi necessari per grafico
-    qForecast = collRef.order_by("sampleTime", direction=firestore.Query.DESCENDING).limit(forecastPeriods+backwardSamples)
+    qForecast = collRef.order_by("sampleTime", direction=firestore.Query.DESCENDING).limit(showPeriods+backwardSamples)
     meteoList = list(qForecast.stream())                # creo la lista dei documenti da graficare sul forecast
     meteoList.reverse()                                 # inverto la lista perchè ero in descending
     ascisse=[]                                          # inizializzo le liste dei dati
@@ -137,6 +137,14 @@ def forecastGraph():
 def controls():
     print("Controlli")
     return redirect('/static/controls.html')
+
+### Ricezione dati da Raspberry
+@app.route('/chatbot', methods=['POST'])
+def chatbotData():
+    atmoEventRequested = request.values["atmoEventRequested"]
+    dataOra, atmoEvent = getDBData(atmoEventRequested,1)
+    return atmoEvent[0]
+
 
 ### Ricezione dati da Raspberry
 @app.route('/raspberry', methods=['POST'])

@@ -1,5 +1,7 @@
 import logging
 import os
+import sys
+from requests import post
 
 from telegram import ForceReply, Update
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
@@ -7,13 +9,19 @@ from datetime import datetime
 
 from secret import bot_token 
 
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, parent_dir)
+from vmURL import baseURL
+
+# baseURL = 'http://34.154.156.218:80'
+
 # Definisco il dizionario di aiuto e similari
 helpDict={"rain": "aiuto della pioggia",
             "wind": "aiuto del vento",
             "humidity": "aiuto dell'umidità",
             "pressure": "aiuto della pressione",
             "temperature": "aiuto della temperatura",
-            "light": "aiuto della illuminazione",
+            "lighting": "aiuto della illuminazione",
             "forecast": "aiuto della previsione",
             "global": "Digita\n/start per avviare il bot\n/help per aiuto\n/help <feature> per aiuto sulla specifica feature\noppure uno dei seguenti per avere i dati relativi alla feature\n   Rain\n   Wind\n   Humidity\n   Pressure\n   Temperature\n   Light\n   Forecast",
             }
@@ -64,8 +72,10 @@ async def answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         msg+=callFnc("1","2")
     await update.message.reply_text(msg)
 
+
 def rain(a,b):
-    valoreFunzione="pioggia"+a+b
+    r = post(baseURL,"rain")            # chiamo il server per acquisire i dati dell'ultima rilevazione
+    valoreFunzione=r
     print(valoreFunzione)
     return valoreFunzione
 
@@ -89,7 +99,7 @@ def temperature(a,b):
     print(valoreFunzione)
     return valoreFunzione
 
-def light(a,b):
+def lighting(a,b):
     valoreFunzione="illuminazione"+a+b
     print(valoreFunzione)
     return valoreFunzione
