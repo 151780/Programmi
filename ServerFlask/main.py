@@ -42,19 +42,20 @@ login = LoginManager(app)
 login.login_view = '/login.html'
 
 # verifico se sono in locale o in cloud
-if os.path.isfile("./credentials.json"):
-    local = True
-else:
-    local = False
+# if os.path.isfile("./credentials.json"):
+#     local = True
+# else:
+#     local = False
 
 # apertura connessione DB Firestore
 dbName = 'db151780'
 collUsers = 'Users'
 collMeteo = 'MeteoData'
-if local:   # verifica se in locale o in cloud
-    meteoStationDB = firestore.Client.from_service_account_json('credentials.json', database=dbName)
-else:
-    meteoStationDB = firestore.Client(database=dbName)
+meteoStationDB = firestore.Client.from_service_account_json('credentials.json', database=dbName)
+# if local:   # verifica se in locale o in cloud
+#     meteoStationDB = firestore.Client.from_service_account_json('credentials.json', database=dbName)
+# else:
+#     meteoStationDB = firestore.Client(database=dbName)
 usersDB = {}
 
 # definizione parametri per forecast
@@ -92,10 +93,11 @@ def getModel():
     dumpPath=f"./tmp/{clfName}.joblib"      # definisco il path di salvataggio locale del modello
     blobName = f"{clfName}.joblib"          # definisco il nome del file di salvataggio sul cloud
 
-    if local:
-        csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
-    else:
-        csClient = storage.Client()
+    csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
+    # if local:
+    #     csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
+    # else:
+    #     csClient = storage.Client()
     gcBucket = csClient.bucket(bucketName)      # scelgo il bucket
     gcBlob = gcBucket.blob(blobName)            # assegno il nome del file di destinazione
     gcBlob.download_to_filename(dumpPath)       # scarico il file dal cloud    
@@ -340,10 +342,11 @@ def saveDataToCloudStorage():
             meteoValues = list(meteoSampleDict.values())
             writer.writerow(meteoValues)
 
-    if local:
-        csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
-    else:
-        csClient = storage.Client()
+    csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
+    # if local:
+    #     csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
+    # else:
+    #     csClient = storage.Client()
 
     gcBucket = csClient.bucket(bucketName)      # scelgo il bucket
     gcBlob = gcBucket.blob(blobName)            # assegno il nome del file di destinazione

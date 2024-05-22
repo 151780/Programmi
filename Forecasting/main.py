@@ -15,18 +15,10 @@ def trainRetrain(event, context):
                             # es:   se backwardGap = 10 e backwardSamples = 5
                             #       considero per il forecast a t le rilevazioni da t-10 a t-6
 
-    if os.path.isfile("./credentials.json"):
-        local = True
-    else:
-        local = False
-    
     # apertura connessione DB Firestore
     dbName = 'db151780'
     collMeteo = 'MeteoData'
-    if local:
-        meteoStationDB = firestore.Client.from_service_account_json('credentials.json', database=dbName)
-    else:
-        meteoStationDB = firestore.Client(database=dbName)
+    meteoStationDB = firestore.Client.from_service_account_json('credentials.json', database=dbName)
 
     collRef = meteoStationDB.collection(collMeteo)  # acquisisco tutta la collezione dei dati meteo
     docsMeteoData = collRef.stream()
@@ -76,10 +68,7 @@ def trainRetrain(event, context):
 
     dump(rf, dumpPath)                      # salvo in locale il modello
 
-    if local:
-        csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
-    else:
-        csClient = storage.Client()
+    csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
     gcBucket = csClient.bucket(bucketName)      # scelgo il bucket
     gcBlob = gcBucket.blob(blobName)            # assegno il nome del file di destinazione
     gcBlob.upload_from_filename(dumpPath)       # carico il file sul cloud
