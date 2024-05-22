@@ -4,6 +4,8 @@ from secret import secret_key
 from google.cloud import firestore, storage
 from joblib import load, dump
 import os
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.metrics import accuracy_score
 
 # i nomi delle finestre sono:
 # index
@@ -40,7 +42,7 @@ else:
 dbName = 'db151780'
 collUsers = 'Users'
 collMeteo = 'MeteoData'
-if local:
+if local:   # verifica se in locale o in cloud
     meteoStationDB = firestore.Client.from_service_account_json('credentials.json', database=dbName)
 else:
     meteoStationDB = firestore.Client(database=dbName)
@@ -49,8 +51,10 @@ usersDB = {}
 # inizializzazione parametri per forecast
 backwardGap = 10        # indica da quanti passi indietro devo partire per il forecast
 backwardSamples = 1     # indica quanti campioni devo inserire per forecast
-showPeriods = 30    # indica per quanti periodi devo prevedere il forecast
+showPeriods = 30        # indica per quanti periodi devo prevedere il forecast
+accuracyThreshold = 0.8  # indica la soglia sotto la quale devo fare retrain
 
+########################## FUNZIONI DI SERVIZIO ##########################
 #### ACQUISIZIONE MODELLO DA CLOUD ####
 def getModel():
     # recupero il modello dal cloud
@@ -76,7 +80,7 @@ def getDBData(atmoEv,sPer):
     qForecast = collRef.order_by("sampleTime", direction=firestore.Query.DESCENDING).limit(sPer)
     meteoList = list(qForecast.stream())                # creo la lista dei documenti da graficare sul forecast
     meteoList.reverse()                                 # inverto la lista perchè ero in descending
-    dOra=[]                                          # inizializzo le liste dei dati
+    dOra=[]                                             # inizializzo le liste dei dati
     aEvent=[]
 
     for sampleMeteo in meteoList:                       # per ogni documento nella collezione
@@ -86,27 +90,73 @@ def getDBData(atmoEv,sPer):
    
     return dOra, aEvent
 
-### Home page
+### SALVATAGGIO DATI SENSORI SU FIRESTORE
+def saveDataToDB(stID,sTime,sTemp,sHum,sPress,sLight,sRain,fRain):
+    print("salvataggio dati")
+    docID = stID + sTime
+    print("docID: ",docID)
+    docVal={}
+    docVal["stationID"] = stID                                      # aggiungo ID stazione
+    docVal["sampleTime"] = sTime                                    # aggiungo dataora rilevazione
+    docVal["temperature"] = sTemp                                   # aggiungo temperatura
+    docVal["humidity"] = sHum                                       # aggiungo umidità
+    docVal["pressure"] = sPress                                     # aggiungo pressione
+    docVal["lighting"] = sLight                                     # aggiungo illuminazione
+    docVal["rain"] = sRain                                          # aggiungo pioggia
+    docVal[f"rain{backwardGap}"] = fRain                            # aggiungo forecast pioggia
+    print("docVal: ",docVal)
+
+    docRef = meteoStationDB.collection(collMeteo).document(docID)   # imposto il documento
+    docRef.set(docVal)                                              # e lo scrivo
+   
+    return 'Data saved',200
+
+### ACQUISIZIONE DATI UTENTI DA FIRESTORE
+def getUsersDB():
+    usersList = meteoStationDB.collection(collUsers).stream()
+    usersDB = {user.to_dict()["username"]: {"password": user.to_dict()["password"],
+                                            "email": user.to_dict()["email"]} for user in usersList}
+    print(usersDB)
+    return usersDB
+    
+### AGGIORNAMENTO DATI UTENTI SU FIRESTORE ON SIGNUP
+def updateUsersDB(username,password,email):
+    docVal={}
+    docVal["username"] = username                   # aggiungo username
+    docVal["password"] = password                   # aggiungo password
+    docVal["email"] = email                         # aggiungo email
+    print("docVal: ",docVal)
+
+    docRef = meteoStationDB.collection(collUsers).document()        # imposto il documento
+    docRef.set(docVal)                                              # e lo scrivo
+ 
+    usersDB[username] = {"password": password,"email": email}
+    print(usersDB)
+    usersDB=getUsersDB()                            # riacquisco il DB completo (più istanze contemporaneamente possibili)
+    return usersDB
+
+########################## FUNZIONI SERVER FLASK GENERALI ##########################
+### HOME PAGE
 @app.route('/',methods=['GET'])
 def main():
     return redirect("/static/index.html")
 
-### Menu generale
+### MENU GENERALE
 @app.route('/menu', methods=['GET'])
 @login_required
 def menu():
     return redirect("/static/menu.html")
 
-### Grafico pioggia
+### GRAFICO PIOGGIA
 @app.route('/rain', methods=['GET'])
 @login_required
 def rainGraph():
     print("Grafico pioggia")
-    dataOra, atmoEvent = getDBData("rain",showPeriods)
-    ds={}
+    dataOra, atmoEvent = getDBData("rain",showPeriods)  # acquisisco i dati da DB
+    ds={}                                               # li passo alla pagina html per mostrare il grafico
     return render_template('/static/rain.html',data=ds)
 
-### Forecasting pioggia
+### FORECASTING PIOGGIA
 @app.route('/forecast', methods=['GET'])
 @login_required
 def forecastGraph():
@@ -128,6 +178,9 @@ def forecastGraph():
     pioggiaReale.pop(0)
     pioggiaPrevista.pop(-1)
 
+    if accuracy_score(pioggiaReale, pioggiaPrevista, normalize=True) < accuracyThreshold: # check
+        retrainStatus=True
+
     ds={}
     return render_template('/static/forecast.html',data=ds)
 
@@ -141,10 +194,9 @@ def controls():
 ### Richiesta dati da Telegram
 @app.route('/chatbot', methods=['POST'])
 def chatbotData():
-    atmoEventRequested = request.values["atmoEventRequested"]
-    dataOra, atmoEvent = getDBData(atmoEventRequested,1)
-    return atmoEvent[0]
-
+    atmoEventRequested = request.values["atmoEventRequested"]   # identifico il parametro da mostrare
+    dataOra, atmoEvent = getDBData(atmoEventRequested,1)        # acquisisco il valore dal DB
+    return atmoEvent[0],200
 
 ### Ricezione dati da Raspberry
 @app.route('/raspberry', methods=['POST'])
@@ -168,6 +220,9 @@ def raspberryData():
             for feat in featureColList:                     # per ogni feature
                 forecastData[0].append(sampleData[feat])    # appendo alla lista dati
 
+        scaler=MinMaxScaler()                               # normalizzo i dati comeda modello
+        forecastData=scaler.transform(forecastData)
+
         rainForecast=rfModel.predict(forecastData)[0]       # predico la pioggia
     else:
         rainForecast=0
@@ -181,89 +236,50 @@ def raspberryData():
     saveDataToDB(stationID,sTime,temperatureValue,humidityValue,pressureValue,lightingValue,rainfallValue,rainForecast)
     return "ok", 200
 
-### Salvataggio dati sensori su Firestore
-def saveDataToDB(stID,sTime,sTemp,sHum,sPress,sLight,sRain,fRain):
-    print("salvataggio dati")
-    docID = stID + sTime
-    print("docID: ",docID)
-    docVal={}
-    docVal["stationID"] = stID                                      # aggiungo ID stazione
-    docVal["sampleTime"] = sTime                                    # aggiungo dataora rilevazione
-    docVal["temperature"] = sTemp                                   # aggiungo temperatura
-    docVal["humidity"] = sHum                                       # aggiungo umidità
-    docVal["pressure"] = sPress                                     # aggiungo pressione
-    docVal["lighting"] = sLight                                     # aggiungo illuminazione
-    docVal["rain"] = sRain                                          # aggiungo pioggia
-    docVal[f"rain{backwardGap}"] = fRain                            # aggiungo forecast pioggia
-    print("docVal: ",docVal)
-
-    docRef = meteoStationDB.collection(collMeteo).document(docID)   # imposto il documento
-    docRef.set(docVal)                                              # e lo scrivo
-   
-    return 'Data saved',200
-
+########################## FUNZIONI SERVER FLASK LOGIN
 ### Verifica utente ###
 @login.user_loader                      # carico il nome dell'utente loggato
 def load_user(username):                # ritorno nome utente se in db altrimenti None
+    usersDB=getUsersDB()                # acquisisco i dati degli utenti registrati
     if username in usersDB:
         return User(username)
     return None
-
-### Acquisizione dati utenti da Firestore
-def getUsersDB():
-    usersList = meteoStationDB.collection(collUsers).stream()
-    usersDB = {user.to_dict()["username"]: {"password": user.to_dict()["password"],
-                                            "email": user.to_dict()["email"]} for user in usersList}
-    print(usersDB)
-    return usersDB
-    
-### Aggiornamento utenti su Firestore on signup e aggiornamento DB locale
-def updateUsersDB(username,password,email):
-    docVal={}
-    docVal["username"] = username                   # aggiungo username
-    docVal["password"] = password                   # aggiungo password
-    docVal["email"] = email                         # aggiungo email
-    print("docVal: ",docVal)
-
-    docRef = meteoStationDB.collection(collUsers).document()        # imposto il documento
-    docRef.set(docVal)                                              # e lo scrivo
- 
-    usersDB[username] = {"password": password,"email": email}
-    print(usersDB)
-    return usersDB
     
 ### Signup nuovo utente ###
 @app.route('/sign_up', methods=['POST'])
 def signup():
-    if current_user.is_authenticated:
+    if current_user.is_authenticated:                           # se utente già autenticato lo porto al menu generale
         return redirect(url_for('/static/menu.html'))
-    username = request.values['username']
+    username = request.values['username']                       # altrimenti acquisisco i dati da pagina html
     email = request.values['email']
     password1 = request.values['password1']
     password2 = request.values['password2']
 
-    if username in usersDB:
+    usersDB = getUsersDB()                                      # acquisisco i dati degli utenti registrati
+    if username in usersDB:                                     # se utente o mail già in DB o se password diverse ripropongo
         return redirect('/static/sign_up.html')
     if password1 != password2:
         return redirect('/static/sign_up.html')
     if email in [valDict["email"] for valDict in usersDB.values()]:
         return redirect('/static/sign_up.html')
     
-    updateUsersDB(username,password1,email)
+    usersDB = updateUsersDB(username,password1,email)           # altrimenti aggiorno DB
     return redirect('/static/login.html')
 
 ### Login utente ###
 @app.route('/login', methods=['POST'])
 def login():
-    if current_user.is_authenticated:
+    if current_user.is_authenticated:                   # se utente già autenticato lo porto al menu generale
         return redirect(url_for('/static/menu.html'))
-    username = request.values['username']
+    username = request.values['username']               # altrimenti acquisisco i dati da pagina html
     password = request.values['password']
 
-    if username in usersDB and password == usersDB[username]["password"]:
-        login_user(User(username))
+    usersDB = getUsersDB()                              # acquisisco i dati degli utenti registrati
+                                                        # (lo devo fare ogni volta perchè se ho più istanze potrei avere aggiornamenti da altre istanze del DB)
+    if username in usersDB and password == usersDB[username]["password"]:   # se registrato e password ok
+        login_user(User(username))                                          # lo porto al menu generale
         return redirect('/static/menu.html')
-    return redirect('/static/login.html')
+    return redirect('/static/login.html')               # altrimenti lo riporto a login
 
 ### Logout utente ###
 @app.route('/logout')
@@ -272,9 +288,8 @@ def logout():
     return redirect('/static/index.html')
 
 
-
 if __name__ == '__main__':
-    usersDB=getUsersDB()
+    # usersDB=getUsersDB()
     rfModel = getModel()            # variabile contenente il modello di forecasting
     app.run(host='0.0.0.0', port=80, debug=False)
 

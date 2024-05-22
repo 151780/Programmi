@@ -7,7 +7,7 @@ import os
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import confusion_matrix, classification_report
+from sklearn.metrics import confusion_matrix, classification_report, accuracy_score
 
 def trainRetrain(event, context):
     backwardGap = 10        # indica da quanti passi indietro devo partire per il forecast
@@ -79,6 +79,8 @@ def trainRetrain(event, context):
     print(confusion_matrix(y_test, y_pred))
     print()
     print(classification_report(y_test, y_pred, zero_division=0))
+    print()
+    print(accuracy_score(y_test, y_pred, normalize=True))
     print()
 
     # salvo il modello in cloud
