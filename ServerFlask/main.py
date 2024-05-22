@@ -11,6 +11,7 @@ from sklearn.metrics import accuracy_score
 from datetime import datetime
 import json
 import schedule
+import csv
 
 
 # i nomi delle finestre sono:
@@ -187,7 +188,7 @@ def rainGraph():
     ds={}                                               # li passo alla pagina html per mostrare il grafico
     return render_template('/static/rain.html',data=ds)
 
-### FORECASTING PIOGGIA
+### GRAFICO FORECASTING PIOGGIA
 @app.route('/forecast', methods=['GET'])
 @login_required
 def forecastGraph():
@@ -217,23 +218,23 @@ def forecastGraph():
     ds={}
     return render_template('/static/forecast.html',data=ds)
 
-### Comando tende
+### GESTIONE COMANDO TENDE
 @app.route('/controls', methods=['GET'])
 @login_required
 def controls():
     print("Controlli")
     return redirect('/static/controls.html')
 
-### Richiesta dati da Telegram
+### RICHIESTA DATI DA TELEGRAM
 @app.route('/chatbot', methods=['POST'])
-def chatbotData():
+def getChatbotData():
     atmoEventRequested = request.values["atmoEventRequested"]   # identifico il parametro da mostrare
     dataOra, atmoEvent = getDataFromDB(atmoEventRequested,1)        # acquisisco il valore dal DB
     return atmoEvent[0],200
 
-### Ricezione dati da Raspberry
+### ACQUISIZIONE DATI DA RASPBERRY
 @app.route('/raspberry', methods=['POST'])
-def raspberryData():
+def getRaspberryData():
     stationID = request.values["stationID"]
     sTime = request.values["sampleTime"]
     temperatureValue = float(request.values["temperature"])
@@ -253,8 +254,8 @@ def raspberryData():
             for feat in featureColList:                     # per ogni feature
                 forecastData[0].append(sampleData[feat])    # appendo alla lista dati
 
-        scaler=MinMaxScaler()                               # normalizzo i dati comeda modello
-        forecastData=scaler.transform(forecastData)
+        # scaler=MinMaxScaler()                               # normalizzo i dati comeda modello
+        # forecastData=scaler.transform(forecastData)
 
         rainForecast=rfModel.predict(forecastData)[0]       # predico la pioggia
     else:
@@ -270,7 +271,7 @@ def raspberryData():
     return "ok", 200
 
 ########################## FUNZIONI SERVER FLASK LOGIN
-### Verifica utente ###
+### VERIFICA UTENTE
 @login.user_loader                      # carico il nome dell'utente loggato
 def load_user(username):                # ritorno nome utente se in db altrimenti None
     usersDB=getUsersDB()                # acquisisco i dati degli utenti registrati
@@ -278,7 +279,7 @@ def load_user(username):                # ritorno nome utente se in db altriment
         return User(username)
     return None
     
-### Signup nuovo utente ###
+### SIGNUP NUOVO UTENTE
 @app.route('/sign_up', methods=['POST'])
 def signup():
     if current_user.is_authenticated:                           # se utente già autenticato lo porto al menu generale
@@ -299,7 +300,7 @@ def signup():
     usersDB = updateUsersDB(username,password1,email)           # altrimenti aggiorno DB
     return redirect('/static/login.html')
 
-### Login utente ###
+### LOGIN UTENTE
 @app.route('/login', methods=['POST'])
 def login():
     if current_user.is_authenticated:                   # se utente già autenticato lo porto al menu generale
@@ -314,14 +315,39 @@ def login():
         return redirect('/static/menu.html')
     return redirect('/static/login.html')               # altrimenti lo riporto a login
 
-### Logout utente ###
+### LOGOUT UTENTE
 @app.route('/logout')
 def logout():
     logout_user()
     return redirect('/static/index.html')
 
 def saveDataToCloudStorage():
-    i=1
+    fileName = "MeteoData"
+    bucketName = "151780-progetto01"            # definisco il nome del bucket di salvataggio in cloud
+    dumpPath=f"./tmp/{fileName}.csv"            # definisco il path di salvataggio locale
+    blobName = f"{fileName}.csv"                # definisco il nome del file di salvataggio sul cloud
+
+    meteoList = meteoStationDB.collection(collMeteo).stream()   # acquisisco i dati dal DB Firestore
+    firstLine = True
+    with open(dumpPath,mode='w',newline='') as csvFile:         # creo il file locale
+        writer = csv.writer(csvFile)
+        for meteoSample in meteoList:
+            meteoSampleDict=meteoSample.to_dict()
+            if firstLine:
+                meteoNames = list(meteoSampleDict.keys())       # creo intestazione solo al primo record
+                writer.writerow(meteoNames)
+                firstLine = False
+            meteoValues = list(meteoSampleDict.values())
+            writer.writerow(meteoValues)
+
+    if local:
+        csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
+    else:
+        csClient = storage.Client()
+
+    gcBucket = csClient.bucket(bucketName)      # scelgo il bucket
+    gcBlob = gcBucket.blob(blobName)            # assegno il nome del file di destinazione
+    gcBlob.upload_from_filename(dumpPath)       # carico il file sul cloud
 
 if __name__ == '__main__':
     schedule.every(10).minutes.do(modelRetrain)         # verifica periodica se necessita retrain del modello

@@ -4,4 +4,5 @@ secret.py
 TestPost.py
 TestForecast.py
 istruzioniLancio.txt
+tmp
 .gitignore
