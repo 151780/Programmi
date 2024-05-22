@@ -47,10 +47,6 @@ def trainRetrain(event, context):
     meteoDatadf = meteoDatadf.drop(columns=columnToRemove)          # e le rimuovo
     meteoDatadf = meteoDatadf.iloc[backwardGap:]                    # rimuovo le prime righe che non hanno colonne valide per forecast
 
-    print(meteoDatadf)
-    # input()
-
-
     # Creo classificatore
     rs=None     # random state per test
 
@@ -71,17 +67,6 @@ def trainRetrain(event, context):
     rf.fit(X_trainval, y_trainval)      # creo il modello
 
     y_pred=rf.predict(X_test)           # effettuo predizione
-    print(y_pred)
-
-    # stampo statistiche del classificatore
-    print("--> CLASSIFICATORE RANDOM FOREST ")        
-    print()
-    print(confusion_matrix(y_test, y_pred))
-    print()
-    print(classification_report(y_test, y_pred, zero_division=0))
-    print()
-    print(accuracy_score(y_test, y_pred, normalize=True))
-    print()
 
     # salvo il modello in cloud
     clfName = "rfClass"
@@ -99,7 +84,5 @@ def trainRetrain(event, context):
     gcBlob = gcBucket.blob(blobName)            # assegno il nome del file di destinazione
     gcBlob.upload_from_filename(dumpPath)       # carico il file sul cloud
 
-if __name__ == '__main__':
-    trainRetrain(None,None)
 
 

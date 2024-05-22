@@ -123,11 +123,12 @@ def getStatus(wStConst):
 
     sTime=datetime.now()
     print(sTime)
-    sTimeStr = sTime.strftime("%Y-%m-%d-%H:%M:%S")
-    print(sTimeStr)
+    # sTimeStr = sTime.strftime("%Y-%m-%d-%H:%M:%S:%f")[:-5]
+    # print(sTimeStr)
 
     dataVal={"stationID":"stazione",
-            "sampleTime":sTimeStr,
+            # "sampleTime":sTimeStr,
+            "sampleTime":sTime,
             "temperature":temperatureBMP,
             "humidity":humidity,
             "pressure":pressure,

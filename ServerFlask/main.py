@@ -2,10 +2,16 @@ from flask import Flask,request,redirect,url_for,render_template,jsonify
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required, UserMixin
 from secret import secret_key
 from google.cloud import firestore, storage
+from google.cloud import pubsub_v1
+from google.auth import jwt
 from joblib import load, dump
 import os
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import accuracy_score
+from datetime import datetime
+import json
+import schedule
+
 
 # i nomi delle finestre sono:
 # index
@@ -20,6 +26,7 @@ from sklearn.metrics import accuracy_score
 # light
 # forecast
 
+########################## INIZIALIZZAZIONI ##########################
 # definizione classe User
 class User(UserMixin):
     def __init__(self, username):
@@ -38,6 +45,7 @@ if os.path.isfile("./credentials.json"):
     local = True
 else:
     local = False
+
 # apertura connessione DB Firestore
 dbName = 'db151780'
 collUsers = 'Users'
@@ -48,18 +56,38 @@ else:
     meteoStationDB = firestore.Client(database=dbName)
 usersDB = {}
 
-# inizializzazione parametri per forecast
+# definizione parametri per forecast
 backwardGap = 10        # indica da quanti passi indietro devo partire per il forecast
 backwardSamples = 1     # indica quanti campioni devo inserire per forecast
-showPeriods = 30        # indica per quanti periodi devo prevedere il forecast
-accuracyThreshold = 0.8  # indica la soglia sotto la quale devo fare retrain
+showPeriods = 50        # indica per quanti periodi devo mostrare i grafici
+accuracyThreshold = 0.8 # indica la soglia sotto la quale devo fare retrain
+modelToRetrain = False  # variabile globale per segnalazione di retrain necessario
 
 ########################## FUNZIONI DI SERVIZIO ##########################
+#### INVIO RICHIESTA DI RETRAIN CON PUBSUB
+def modelRetrain():
+    global modelToRetrain
+
+    if modelToRetrain:
+        myProj = "151780-Progetto01"
+        myTopic = "retrainModel"
+
+        servAccount = json.load(open("credentials.json"))
+        audience = "https://pubsub.googleapis.com/google.pubsub.v1.Publisher"
+        credentials = jwt.Credentials.from_service_account_info(servAccount, audience=audience)
+        publisher = pubsub_v1.PublisherClient(credentials=credentials)
+        topic_path = publisher.topic_path(myProj, myTopic)
+        r = publisher.publish(topic_path, b'Retrain model')
+        print(r.result())
+        modelToRetrain = False
+
+        return
+
 #### ACQUISIZIONE MODELLO DA CLOUD ####
 def getModel():
     # recupero il modello dal cloud
     clfName = "rfClass"
-    bucketName = "151780-progetto01"        # definisco il nome del bucket di salvatoaggio in cloud
+    bucketName = "151780-progetto01"        # definisco il nome del bucket di salvataggio in cloud
     dumpPath=f"./tmp/{clfName}.joblib"      # definisco il path di salvataggio locale del modello
     blobName = f"{clfName}.joblib"          # definisco il nome del file di salvataggio sul cloud
 
@@ -75,7 +103,7 @@ def getModel():
     return rf
 
 ### ACQUSIZIONE DATI DAL DB PER GRAFICI
-def getDBData(atmoEv,sPer):
+def getDataFromDB(atmoEv,sPer):
     collRef = meteoStationDB.collection(collMeteo)      # definisco la collection da leggere e ne leggo gli ultimi elementi necessari per grafico
     qForecast = collRef.order_by("sampleTime", direction=firestore.Query.DESCENDING).limit(sPer)
     meteoList = list(qForecast.stream())                # creo la lista dei documenti da graficare sul forecast
@@ -90,10 +118,11 @@ def getDBData(atmoEv,sPer):
    
     return dOra, aEvent
 
-### SALVATAGGIO DATI SENSORI SU FIRESTORE
+### SALVATAGGIO DATI SENSORI SU FIRESTORE E SU FILE CSV IN STORAGE PER LOOKER
 def saveDataToDB(stID,sTime,sTemp,sHum,sPress,sLight,sRain,fRain):
+    sTimeStr = sTime.strftime("%Y-%m-%d-%H:%M:%S:%f")[:-5]
     print("salvataggio dati")
-    docID = stID + sTime
+    docID = stID + sTimeStr
     print("docID: ",docID)
     docVal={}
     docVal["stationID"] = stID                                      # aggiungo ID stazione
@@ -108,7 +137,9 @@ def saveDataToDB(stID,sTime,sTemp,sHum,sPress,sLight,sRain,fRain):
 
     docRef = meteoStationDB.collection(collMeteo).document(docID)   # imposto il documento
     docRef.set(docVal)                                              # e lo scrivo
-   
+
+
+
     return 'Data saved',200
 
 ### ACQUISIZIONE DATI UTENTI DA FIRESTORE
@@ -152,7 +183,7 @@ def menu():
 @login_required
 def rainGraph():
     print("Grafico pioggia")
-    dataOra, atmoEvent = getDBData("rain",showPeriods)  # acquisisco i dati da DB
+    dataOra, atmoEvent = getDataFromDB("rain",showPeriods)  # acquisisco i dati da DB
     ds={}                                               # li passo alla pagina html per mostrare il grafico
     return render_template('/static/rain.html',data=ds)
 
@@ -160,6 +191,8 @@ def rainGraph():
 @app.route('/forecast', methods=['GET'])
 @login_required
 def forecastGraph():
+    global modelToRetrain
+
     print("Grafico forecast pioggia")
     collRef = meteoStationDB.collection(collMeteo)      # definisco la collection da leggere e ne leggo gli ultimi elementi necessari per grafico
     qForecast = collRef.order_by("sampleTime", direction=firestore.Query.DESCENDING).limit(showPeriods+backwardSamples)
@@ -178,8 +211,8 @@ def forecastGraph():
     pioggiaReale.pop(0)
     pioggiaPrevista.pop(-1)
 
-    if accuracy_score(pioggiaReale, pioggiaPrevista, normalize=True) < accuracyThreshold: # check
-        retrainStatus=True
+    if accuracy_score(pioggiaReale, pioggiaPrevista, normalize=True) < accuracyThreshold: # se accuracy si riduce sottosoglia
+        modelToRetrain = True
 
     ds={}
     return render_template('/static/forecast.html',data=ds)
@@ -195,7 +228,7 @@ def controls():
 @app.route('/chatbot', methods=['POST'])
 def chatbotData():
     atmoEventRequested = request.values["atmoEventRequested"]   # identifico il parametro da mostrare
-    dataOra, atmoEvent = getDBData(atmoEventRequested,1)        # acquisisco il valore dal DB
+    dataOra, atmoEvent = getDataFromDB(atmoEventRequested,1)        # acquisisco il valore dal DB
     return atmoEvent[0],200
 
 ### Ricezione dati da Raspberry
@@ -289,7 +322,7 @@ def logout():
 
 
 if __name__ == '__main__':
-    # usersDB=getUsersDB()
-    rfModel = getModel()            # variabile contenente il modello di forecasting
+    schedule.every(10).minutes.do(modelRetrain)         # verifica periodica se necessita retrain del modello
+    rfModel = getModel()                                # variabile contenente il modello di forecasting
     app.run(host='0.0.0.0', port=80, debug=False)
 
