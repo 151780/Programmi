@@ -320,9 +320,12 @@ def logout():
     logout_user()
     return redirect('/static/index.html')
 
+def saveDataToCloudStorage():
+    i=1
 
 if __name__ == '__main__':
     schedule.every(10).minutes.do(modelRetrain)         # verifica periodica se necessita retrain del modello
+    schedule.every(5).minutes.do(saveDataToCloudStorage)         # aggiornamento periodico cloud storage per looker
     rfModel = getModel()                                # variabile contenente il modello di forecasting
     app.run(host='0.0.0.0', port=80, debug=False)
 
