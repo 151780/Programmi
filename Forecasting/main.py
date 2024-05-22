@@ -57,11 +57,11 @@ def trainRetrain(event, context):
     X_trainval, X_test, y_trainval, y_test = train_test_split(X, y, test_size=0.3, random_state=rs)
     X_train, X_val, y_train, y_val = train_test_split(X_trainval, y_trainval, test_size=0.3, random_state=rs)
     # normalizzo con MinMax
-    scaler=MinMaxScaler()
-    X_train=scaler.fit_transform(X_train)
-    X_test=scaler.transform(X_test)
-    X_trainval=scaler.transform(X_trainval)
-    X_val=scaler.transform(X_val)
+    # scaler=MinMaxScaler()
+    # X_train=scaler.fit_transform(X_train)
+    # X_test=scaler.transform(X_test)
+    # X_trainval=scaler.transform(X_trainval)
+    # X_val=scaler.transform(X_val)
 
     rf = RandomForestClassifier()       # classifico con random forest
     rf.fit(X_trainval, y_trainval)      # creo il modello
