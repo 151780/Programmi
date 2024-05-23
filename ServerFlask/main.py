@@ -1,4 +1,4 @@
-from flask import Flask,request,redirect,url_for,render_template,jsonify
+from flask import Flask,request,redirect,url_for,render_template,jsonify,flash
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required, UserMixin
 from secret import secret_key
 from google.cloud import firestore, storage
@@ -39,7 +39,7 @@ class User(UserMixin):
 app = Flask(__name__)
 app.config['SECRET_KEY'] = secret_key
 login = LoginManager(app)
-login.login_view = '/login.html'
+login.login_view = '/static/login.html'
 
 # verifico se sono in locale o in cloud
 # if os.path.isfile("./credentials.json"):
@@ -52,10 +52,7 @@ dbName = 'db151780'
 collUsers = 'Users'
 collMeteo = 'MeteoData'
 meteoStationDB = firestore.Client.from_service_account_json('credentials.json', database=dbName)
-# if local:   # verifica se in locale o in cloud
-#     meteoStationDB = firestore.Client.from_service_account_json('credentials.json', database=dbName)
-# else:
-#     meteoStationDB = firestore.Client(database=dbName)
+
 usersDB = {}
 
 # definizione parametri per forecast
@@ -178,7 +175,6 @@ def getUsersDB():
     usersList = meteoStationDB.collection(collUsers).stream()
     usersDB = {user.to_dict()["username"]: {"password": user.to_dict()["password"],
                                             "email": user.to_dict()["email"]} for user in usersList}
-    print(usersDB)
     return usersDB
     
 ### AGGIORNAMENTO DATI UTENTI SU FIRESTORE ON SIGNUP
@@ -213,14 +209,18 @@ def menu():
 @app.route('/rain', methods=['GET'])
 @login_required
 def rainGraph():
-    print("Grafico pioggia")
     featData = getDataFromDB("rain",showPeriods)  # acquisisco i dati da DB
-    ds=""                                               # li passo alla pagina html per mostrare il grafico
+    ds=[]                                         # li passo alla pagina html per mostrare il grafico
 
+    i=1
     for fData in featData:
-        ds +=f"['{fData[0]}',{fData[1]}],\n"
+        fTime = fData[0].strftime("%H:%M:%S")      
+        ds.append([i,fData[1]])
+        i+=1
 
-    return render_template('/static/rain.html',data=ds)
+    return json.dumps(ds),200
+    
+    # return render_template('/static/rain.html',data=ds)
 
 ### GRAFICO FORECASTING PIOGGIA
 @app.route('/forecast', methods=['GET'])
@@ -257,6 +257,13 @@ def forecastGraph():
 @login_required
 def controls():
     print("Controlli")
+    return redirect('/static/controls.html')
+
+### ACQUISIZIONE COMANDO TENDE
+@app.route('/awning/<p>', methods=['GET'])
+@login_required
+def awningControl(p):
+    print("Controllo",p)
     return redirect('/static/controls.html')
 
 ### RICHIESTA DATI DA TELEGRAM - OK
@@ -348,10 +355,11 @@ def login():
     if username in usersDB and password == usersDB[username]["password"]:   # se registrato e password ok
         login_user(User(username))                                          # lo porto al menu generale
         return redirect('/static/menu.html')
+    
     return redirect('/static/login.html')               # altrimenti lo riporto a login
 
 ### LOGOUT UTENTE
-@app.route('/logout')
+@app.route('/logout', methods=["POST"])
 def logout():
     logout_user()
     return redirect('/static/index.html')
