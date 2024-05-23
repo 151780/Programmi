@@ -271,7 +271,7 @@ def pressureGraph():
     return json.dumps(ds),200
 
 ### GRAFICO LIGHTING
-@app.route('/light', methods=['GET'])
+@app.route('/lighting', methods=['GET'])
 @login_required
 def lightingGraph():
     featData = getDataFromDB("lighting",showPeriods)  # acquisisco i dati da DB
