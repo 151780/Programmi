@@ -1,5 +1,4 @@
 import pandas as pd
-from sklearn.metrics import mean_absolute_error
 from joblib import dump, load
 from google.cloud import firestore, storage
 import os
