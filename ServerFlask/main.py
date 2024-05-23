@@ -111,15 +111,13 @@ def getDataFromDB(atmoEv,sPer):
     qForecast = collRef.order_by("sampleTime", direction=firestore.Query.DESCENDING).limit(sPer)
     meteoList = list(qForecast.stream())                # creo la lista dei documenti da graficare sul forecast
     meteoList.reverse()                                 # inverto la lista perchè ero in descending
-    dOra=[]                                             # inizializzo le liste dei dati
-    aEvent=[]
+    featData=[]                                             # inizializzo le liste dei dati
 
     for sampleMeteo in meteoList:                       # per ogni documento nella collezione
         sampleDict = sampleMeteo.to_dict()              # appendo il valore alla lista corrispondente
-        dOra.append(sampleDict["sampleTime"])
-        aEvent.append(sampleDict[atmoEv])
+        featData.append((sampleDict["sampleTime"],sampleDict[atmoEv]))
    
-    return dOra, aEvent
+    return featData
 
 ### SALVATAGGIO DATI SENSORI SU FIRESTORE E SU FILE CSV IN STORAGE PER LOOKER
 def saveDataToDB(stID,sTime,sTemp,sHum,sPress,sLight,sRain,fRain):
@@ -216,8 +214,12 @@ def menu():
 @login_required
 def rainGraph():
     print("Grafico pioggia")
-    dataOra, atmoEvent = getDataFromDB("rain",showPeriods)  # acquisisco i dati da DB
-    ds={}                                               # li passo alla pagina html per mostrare il grafico
+    featData = getDataFromDB("rain",showPeriods)  # acquisisco i dati da DB
+    ds=""                                               # li passo alla pagina html per mostrare il grafico
+
+    for fData in featData:
+        ds +=f"['{fData[0]}',{fData[1]}],\n"
+
     return render_template('/static/rain.html',data=ds)
 
 ### GRAFICO FORECASTING PIOGGIA
@@ -257,12 +259,13 @@ def controls():
     print("Controlli")
     return redirect('/static/controls.html')
 
-### RICHIESTA DATI DA TELEGRAM
+### RICHIESTA DATI DA TELEGRAM - OK
 @app.route('/chatbot', methods=['POST'])
 def getChatbotData():
     atmoEventRequested = request.values["atmoEventRequested"]   # identifico il parametro da mostrare
     dataOra, atmoEvent = getDataFromDB(atmoEventRequested,1)        # acquisisco il valore dal DB
-    return atmoEvent[0],200
+    resp = {"valore":atmoEvent[0]}
+    return resp
 
 ### ACQUISIZIONE DATI DA RASPBERRY
 @app.route('/raspberry', methods=['POST'])

@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+import json
 from requests import post
 
 from telegram import ForceReply, Update
@@ -14,6 +15,8 @@ sys.path.insert(0, parent_dir)
 from vmURL import baseURL
 
 # baseURL = 'http://34.154.156.218:80'
+baseURL = 'http://192.168.1.50:80'
+
 
 # Definisco il dizionario di aiuto e similari
 helpDict={"rain": "aiuto della pioggia",
@@ -69,45 +72,38 @@ async def answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     else:                                               # altrimenti notifico il valore
         msg=f"{user.first_name}, qui sotto i dati che hai richiesto\n"
         callFnc = globals().get(funzioneRichiesta)
-        msg+=callFnc("1","2")
+        valFeat,umFeat=callFnc()
+        msg+=f"{funzioneRichiesta}: {valFeat} {umFeat}"
     await update.message.reply_text(msg)
 
 
-def rain(a,b):
-    r = post(f'{baseURL}/chatbot',data={"atmoEventRequested":"rain"})    # chiamo il server per acquisire i dati dell'ultima rilevazione
-    valoreFunzione=r
-    print(valoreFunzione)
-    return valoreFunzione
+def rain():
+    resp = post(f'{baseURL}/chatbot',data={"atmoEventRequested":"rain"})    # chiamo il server per acquisire i dati dell'ultima rilevazione
+    return resp.json()["valore"],"mm"
 
-def wind(a,b):
-    valoreFunzione="vento"+a+b
-    print(valoreFunzione)
-    return valoreFunzione
+def wind():
+    resp = post(f'{baseURL}/chatbot',data={"atmoEventRequested":"wind"})    # chiamo il server per acquisire i dati dell'ultima rilevazione
+    return resp.json()["valore"],"m/s"
 
-def humidity(a,b):
-    valoreFunzione="umidità"+a+b
-    print(valoreFunzione)
-    return valoreFunzione
+def humidity():
+    resp = post(f'{baseURL}/chatbot',data={"atmoEventRequested":"humidity"})    # chiamo il server per acquisire i dati dell'ultima rilevazione
+    return resp.json()["valore"],"%"
 
-def pressure(a,b):
-    valoreFunzione="pressione"+a+b
-    print(valoreFunzione)
-    return valoreFunzione
+def pressure():
+    resp = post(f'{baseURL}/chatbot',data={"atmoEventRequested":"pressure"})    # chiamo il server per acquisire i dati dell'ultima rilevazione
+    return resp.json()["valore"],"hPa"
 
-def temperature(a,b):
-    valoreFunzione="temperatura"+a+b
-    print(valoreFunzione)
-    return valoreFunzione
+def temperature():
+    resp = post(f'{baseURL}/chatbot',data={"atmoEventRequested":"temperature"})    # chiamo il server per acquisire i dati dell'ultima rilevazione
+    return resp.json()["valore"],"°C"
 
-def lighting(a,b):
-    valoreFunzione="illuminazione"+a+b
-    print(valoreFunzione)
-    return valoreFunzione
+def lighting():
+    resp = post(f'{baseURL}/chatbot',data={"atmoEventRequested":"lighting"})    # chiamo il server per acquisire i dati dell'ultima rilevazione
+    return resp.json()["valore"],"%"
 
-def forecast(a,b):
-    valoreFunzione="previsione alle ore "+datetime.now().strftime('%H:%M:%S')
-    print(valoreFunzione)
-    return valoreFunzione
+def forecast():
+    resp = post(f'{baseURL}/chatbot',data={"atmoEventRequested":"rain10"})    # chiamo il server per acquisire i dati dell'ultima rilevazione
+    return resp.json()["valore"],""
 
 # Gestione dell'invio di foto
 async def photoAnswer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
