@@ -211,16 +211,77 @@ def menu():
 def rainGraph():
     featData = getDataFromDB("rain",showPeriods)  # acquisisco i dati da DB
     ds=[]                                         # li passo alla pagina html per mostrare il grafico
-
     i=1
     for fData in featData:
         fTime = fData[0].strftime("%H:%M:%S")      
         ds.append([i,fData[1]])
         i+=1
-
     return json.dumps(ds),200
-    
-    # return render_template('/static/rain.html',data=ds)
+
+### GRAFICO HUMIDITY
+@app.route('/humidity', methods=['GET'])
+@login_required
+def humidityGraph():
+    featData = getDataFromDB("humidity",showPeriods)  # acquisisco i dati da DB
+    ds=[]                                         # li passo alla pagina html per mostrare il grafico
+    i=1
+    for fData in featData:
+        fTime = fData[0].strftime("%H:%M:%S")      
+        ds.append([i,fData[1]])
+        i+=1
+    return json.dumps(ds),200
+
+### GRAFICO TEMPERATURE
+@app.route('/temperature', methods=['GET'])
+@login_required
+def temperatureGraph():
+    featData = getDataFromDB("temperature",showPeriods)  # acquisisco i dati da DB
+    ds=[]                                         # li passo alla pagina html per mostrare il grafico
+    i=1
+    for fData in featData:
+        fTime = fData[0].strftime("%H:%M:%S")      
+        ds.append([i,fData[1]])
+        i+=1
+    return json.dumps(ds),200
+
+### GRAFICO WIND
+@app.route('/wind', methods=['GET'])
+@login_required
+def windGraph():
+    featData = getDataFromDB("wind",showPeriods)  # acquisisco i dati da DB
+    ds=[]                                         # li passo alla pagina html per mostrare il grafico
+    i=1
+    for fData in featData:
+        fTime = fData[0].strftime("%H:%M:%S")      
+        ds.append([i,fData[1]])
+        i+=1
+    return json.dumps(ds),200
+
+### GRAFICO PRESSURE
+@app.route('/pressure', methods=['GET'])
+@login_required
+def pressureGraph():
+    featData = getDataFromDB("pressure",showPeriods)  # acquisisco i dati da DB
+    ds=[]                                         # li passo alla pagina html per mostrare il grafico
+    i=1
+    for fData in featData:
+        fTime = fData[0].strftime("%H:%M:%S")      
+        ds.append([i,fData[1]])
+        i+=1
+    return json.dumps(ds),200
+
+### GRAFICO LIGHTING
+@app.route('/light', methods=['GET'])
+@login_required
+def lightingGraph():
+    featData = getDataFromDB("lighting",showPeriods)  # acquisisco i dati da DB
+    ds=[]                                         # li passo alla pagina html per mostrare il grafico
+    i=1
+    for fData in featData:
+        fTime = fData[0].strftime("%H:%M:%S")      
+        ds.append([i,fData[1]])
+        i+=1
+    return json.dumps(ds),200
 
 ### GRAFICO FORECASTING PIOGGIA
 @app.route('/forecast', methods=['GET'])
