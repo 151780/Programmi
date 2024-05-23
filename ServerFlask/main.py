@@ -79,7 +79,7 @@ def modelRetrain():
         credentials = jwt.Credentials.from_service_account_info(servAccount, audience=audience)
         publisher = pubsub_v1.PublisherClient(credentials=credentials)
         topic_path = publisher.topic_path(myProj, myTopic)
-        r = publisher.publish(topic_path, b'Retrain model')
+        r = publisher.publish(topic_path, b'Retrain model', type="retrain")
         print(r.result())
         modelToRetrain = False
 
@@ -144,6 +144,36 @@ def saveDataToDB(stID,sTime,sTemp,sHum,sPress,sLight,sRain,fRain):
 
 
     return 'Data saved',200
+
+### SALVATAGGIO DATI SENSORI SU FILE CSV IN STORAGE PER LOOKER
+def saveDataToCloudStorage():
+    fileName = "MeteoData"
+    bucketName = "151780-progetto01"            # definisco il nome del bucket di salvataggio in cloud
+    dumpPath=f"./tmp/{fileName}.csv"            # definisco il path di salvataggio locale
+    blobName = f"{fileName}.csv"                # definisco il nome del file di salvataggio sul cloud
+
+    meteoList = meteoStationDB.collection(collMeteo).stream()   # acquisisco i dati dal DB Firestore
+    firstLine = True
+    with open(dumpPath,mode='w',newline='') as csvFile:         # creo il file locale
+        writer = csv.writer(csvFile)
+        for meteoSample in meteoList:
+            meteoSampleDict=meteoSample.to_dict()
+            if firstLine:
+                meteoNames = list(meteoSampleDict.keys())       # creo intestazione solo al primo record
+                writer.writerow(meteoNames)
+                firstLine = False
+            meteoValues = list(meteoSampleDict.values())
+            writer.writerow(meteoValues)
+
+    csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
+    # if local:
+    #     csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
+    # else:
+    #     csClient = storage.Client()
+
+    gcBucket = csClient.bucket(bucketName)      # scelgo il bucket
+    gcBlob = gcBucket.blob(blobName)            # assegno il nome del file di destinazione
+    gcBlob.upload_from_filename(dumpPath)       # carico il file sul cloud
 
 ### ACQUISIZIONE DATI UTENTI DA FIRESTORE
 def getUsersDB():
@@ -323,34 +353,6 @@ def logout():
     logout_user()
     return redirect('/static/index.html')
 
-def saveDataToCloudStorage():
-    fileName = "MeteoData"
-    bucketName = "151780-progetto01"            # definisco il nome del bucket di salvataggio in cloud
-    dumpPath=f"./tmp/{fileName}.csv"            # definisco il path di salvataggio locale
-    blobName = f"{fileName}.csv"                # definisco il nome del file di salvataggio sul cloud
-
-    meteoList = meteoStationDB.collection(collMeteo).stream()   # acquisisco i dati dal DB Firestore
-    firstLine = True
-    with open(dumpPath,mode='w',newline='') as csvFile:         # creo il file locale
-        writer = csv.writer(csvFile)
-        for meteoSample in meteoList:
-            meteoSampleDict=meteoSample.to_dict()
-            if firstLine:
-                meteoNames = list(meteoSampleDict.keys())       # creo intestazione solo al primo record
-                writer.writerow(meteoNames)
-                firstLine = False
-            meteoValues = list(meteoSampleDict.values())
-            writer.writerow(meteoValues)
-
-    csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
-    # if local:
-    #     csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
-    # else:
-    #     csClient = storage.Client()
-
-    gcBucket = csClient.bucket(bucketName)      # scelgo il bucket
-    gcBlob = gcBucket.blob(blobName)            # assegno il nome del file di destinazione
-    gcBlob.upload_from_filename(dumpPath)       # carico il file sul cloud
 
 if __name__ == '__main__':
     schedule.every(10).minutes.do(modelRetrain)         # verifica periodica se necessita retrain del modello

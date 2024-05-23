@@ -8,7 +8,7 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, classification_report, accuracy_score
 
-def trainRetrain(event, context):
+def trainRetrain(event, context, type="retrain"):
     backwardGap = 10        # indica da quanti passi indietro devo partire per il forecast
     backwardSamples = 1     # indica quanti campioni devo inserire per forecast
                             # es:   se backwardGap = 10 e backwardSamples = 5
