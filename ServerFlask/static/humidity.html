@@ -10,7 +10,7 @@
 -->
 <html>
 	<head>
-		<title>Rain</title>
+		<title>Humidity</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 		<link rel="stylesheet" href="assets/css/main.css" />
@@ -62,19 +62,13 @@
 				<!-- Additional Elements -->
 					<section class="wrapper style1 align-center">
 						<div class="inner">
-							<h2 style = "color: #1B1154; font-family: Arial; font-size: 80px">Rain</h2>
+							<h2 style = "color: #1B1154; font-family: Arial; font-size: 80px">Humidity</h2>
 							<div class="index align-left">
 
 								<!-- Images -->
 									<section>
 
 										<div id="chart_div"></div>
-										
-										
-										<!--<div class="content">
-											<span class="image fit"><img src="images/banner.jpg" alt="" /></span>
-										
-										<div id="chart_div" style="width: 1000px; height: 600px;"></div>-->
 										
 										</div>
 									</section>
@@ -97,7 +91,7 @@
 			<script src="assets/js/demo.js"></script>
 			<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 			<script type="text/javascript">
-				$.get("/rain",function(datav, status){
+				$.get("/humidity",function(datav, status){
 					datav = JSON.parse(datav)
 
 
@@ -108,7 +102,7 @@
 
 						  var data = new google.visualization.DataTable();
 						  data.addColumn('number', 'Time');
-						  data.addColumn('number', 'Rain');
+						  data.addColumn('number', 'Humidity');
 						  datav2 = []
 						  for(i=0; i<datav.length;i++)
 						  	datav2.push([datav[i][0],datav[i][1]])
@@ -119,7 +113,7 @@
 							  title: 'Time'
 							},
 							vAxis: {
-							  title: 'Rain [mm]'
+							  title: 'Humidity [%]'
 							},
 							legend:'none'
 						  };

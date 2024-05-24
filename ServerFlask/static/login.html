@@ -6,7 +6,7 @@
 
 	Note: Only needed for demo purposes. Delete for production sites.
 
-	### VERSIONE 1 - 16/5/24
+	### VERSIONE 4 - 23/5/24
 -->
 <html>
 	<head>
@@ -24,7 +24,7 @@
             background-position: center; /* Posizione centrata */
         }
     </style>
-	<body class="is-preload">
+
 
 		<!-- Wrapper -->
 			<div id="wrapper" class="divided">
@@ -32,37 +32,42 @@
 				<!-- Additional Elements -->
 				<section class="wrapper style1 align-center">
 					<div class="inner">
-						<h1 style = "color: #1B1154; font-family: serif; font-size: 100px">Login</h1>
+						<h1 style = "color: #1B1154; font-family: Arial; font-size: 100px">Login</h1>
 						<p style = "font-style: italic; font-size: 20px">Please, insert here your username and password.</p>
 						<div class="index align-left">
 
 							<!-- Form -->
+							<section id="contact">
+								<div class="content">
+		
 									<section>
-										<div class="content">
-											<form method="post" action="#">
-												<div class="fields">
-													<div class="field half">
-														<label for="name" style = "font-size: 20px">Username</label>
-														<input type="text" name="name" id="name" value="" style = "background-color:#F6F8F8" />
-													</div>
-													<div class="field half">
-														<label for="password" style = "font-size: 20px">Password</label>
-														<input type="password" name="password" id="password" value="" style = "background-color:#F6F8F8" />
-													</div>
+										<div id="output"></div>
+										<form method="post" action="/login">
+											<div class="fields">
+												<div class="field half">
+													<label for="username"style = "font-size: 20px">Name</label>
+													<input type="text" name="username" id="username" style = "background-color:#F6F8F8" />
 												</div>
-												<ul class="actions">
-													<li><a href="http://localhost:63342/PCSC2024/Progetto%20PCSC/menu.html?_ijt=8hkn0j6216q3lkphellndqja3r&_ij_reload=RELOAD_ON_SAVE"
-														   class="button large wide smooth-scroll-middle"
-														   style = "font-family: monospace; font-size: 16px; color: #1B1154;
-														   background-color: #F6F8F8"> LOGIN </a> </li>
-												</ul>
-											</form>
-
-										</div>
+												<div class="field half">
+													<label for="password" style = "font-size: 20px">Password</label>
+													<input type="password" name="password" id="password" style = "background-color:#F6F8F8" />
+												</div>
+											</div>
+											<ul class="actions">
+												<li><input id="submit" type="submit" value="Login" style = "font-family: monospace; font-size: 16px; color: #1B1154;
+													background-color: #F6F8F8"/></li>
+												<li><input type="reset" value="Clear" style = "font-family: monospace; font-size: 16px; color: #1B1154;
+													background-color: #F6F8F8" /></li>
+											</ul>
+										</form>
+										<div id="error" style="color: red; font-size: 20px;"></div>
 									</section>
+		
+								</div>
+							</section>
+				
 						</div>
 					</div>
-				</section>
 
 			</div>
 
@@ -78,5 +83,16 @@
 		<!-- Note: Only needed for demo purposes. Delete for production sites. -->
 			<script src="assets/js/demo.js"></script>
 
+	<script>
+    // Funzione per mostrare l'errore
+    window.onload = function() {
+        var errorMessage = document.getElementById('error_message');
+        if (errorMessage && errorMessage.value === 'invalid_credentials') {
+            document.getElementById('error').textContent = 'Invalid username or password';
+        }
+    }
+	</script>
+
 	</body>
+
 </html>

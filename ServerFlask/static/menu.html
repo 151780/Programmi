@@ -4,79 +4,107 @@
 	html5up.net | @ajlkn
 	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
 
-	### VERSIONE 1 - 16/5/24
+	### VERSIONE 4 - 23/5/24
 -->
 <html>
 	<head>
-		<title>Menù</title>
+		<title>Menu</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 		<link rel="stylesheet" href="assets/css/main.css" />
 		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
 		<script src="https://kit.fontawesome.com/38ebafd79e.js" crossorigin="anonymous"></script>
 	</head>
+
+		<style>
+        body {
+            background-color: #DEEAF6; /* Colore di sfondo */
+            background-size: cover; /* Copre l'intero sfondo */
+            background-position: center; /* Posizione centrata */
+        }
+    </style>
 	<body class="is-preload">
 
 		<!-- Wrapper -->
 			<div id="wrapper" class="divided">
 
+				<!-- Logout Button -->
+                <div style="position: absolute; top: 10px; right: 10px;">
+                    <form method="post" action="/logout">
+                        <button type="submit" class="button small" style="font-family: monospace; font-size: 16px; color: #1B1154; background-color: #F6F8F8;">
+                            Logout
+                        </button>
+                    </form>
+                </div>
+
 				<!-- Items -->
 					<section class="wrapper style1 align-center">
 						<div class="inner">
-							<h1>Diagrams overview</h1>
-							<p> By clicking on the icons here, it is possibile to take a look at different diagrams.</p>
+							<h1 style = "font-family: Arial; font-size: 80px; margin: -50px auto 0 auto;">Diagrams overview</h1>
 
 							<div class="items style1 medium onscroll-fade-in">
 
 								<!-- Grafico pioggia -->
 								<section>
-									<a href="http://localhost:63342/PCSC2024/Progetto%20PCSC/rain.html?_ijt=mabhovn53av4s6spvcv2d2r4os&_ij_reload=RELOAD_ON_SAVE">
+									<a href="rain.html">
 										<i class="fa-solid fa-cloud-rain" style = "font-size: 50px"></i></a>
-									<h3><a href="http://localhost:63342/PCSC2024/Progetto%20PCSC/rain.html?_ijt=mabhovn53av4s6spvcv2d2r4os&_ij_reload=RELOAD_ON_SAVE">Rain</a></h3>
+									<h3 style = "font-family: Avenir; font-size: 23px"><a href="rain.html">Rain</a></h3>
 								</section>
 
 								<!-- Grafico umidità -->
 								<section>
-									<a href="">
+									<a href="humidity.html">
 										<i class="fa-solid fa-droplet" style = "font-size: 50px"></i></a>
-									<h3><a href="">Humidity</a></h3>
+									<h3 style = "font-family: Avenir; font-size: 23px"><a href="humidity.html">Humidity</a></h3>
 								</section>
 
 								<!-- Grafico illuminazione -->
 								<section>
-									<a href="">
+									<a href="light.html">
 										<i class="fa-solid fa-sun" style = "font-size: 50px"></i></a>
-									<h3><a href="">Light</a></h3>
+									<h3 style = "font-family: Avenir; font-size: 23px"><a href="light.html">Light</a></h3>
 								</section>
 
 								<!-- Grafico temperatura -->
 								<section>
-									<a href="">
+									<a href="temperature.html">
 										<i class="fa-solid fa-temperature-three-quarters" style = "font-size: 50px"></i></a>
-									<h3><a href="">Temperature</a></h3>
+									<h3 style = "font-family: Avenir; font-size: 23px"><a href="temperature.html">Temperature</a></h3>
 								</section>
 
+								<!-- Grafico vento -->
+								<section>
+									<a href="wind.html">
+										<i class="fa-solid fa-wind" style = "font-size: 50px"></i></a>
+									<h3 style = "font-family: Avenir; font-size: 23px"><a href="wind.html">Wind</a></h3>
+								</section>
+
+								<!-- Grafico pressione atmosferica -->
+								<section>
+									<a href="pressure.html">
+										<i class="fa-solid fa-clock" style = "font-size: 50px" ></i>
+									<h3 style = "font-family: Avenir; font-size: 23px"><a href="pressure.html">Pressure</a></h3>
+								</section>
+
+								<!-- Grafico forecast -->
+								<section>
+									<a href="forecast.html">
+										<i class="fa-solid fa-chart-line" style = "font-size: 50px" ></i>
+									<h3 style = "font-family: Avenir; font-size: 23px"><a href="forecast.html">Forecast</a></h3>
+								</section>
 
 								<section>
-									<span class="icon solid style2 major fa-cog"></span>
-									<h3>Five</h3>
+									<span></span>
+									<h3></h3>
 								</section>
+
+								<!-- Grafico controlli -->
 								<section>
-									<span class="icon style2 major fa-paper-plane"></span>
-									<h3>Six</h3>
+									<a href="controls.html">
+										<i class="fa-solid fa-gear" style = "font-size: 50px" ></i>
+									<h3 style = "font-family: Avenir; font-size: 23px"><a href="controls.html">Controls</a></h3>
 								</section>
-								<section>
-									<span class="icon solid style2 major fa-desktop"></span>
-									<h3>Seven</h3>
-								</section>
-								<section>
-									<span class="icon solid style2 major fa-sync-alt"></span>
-									<h3>Eight</h3>
-								</section>
-								<section>
-									<span class="icon solid style2 major fa-hashtag"></span>
-									<h3>Nine</h3>
-								</section>
+
 							</div>
 						</div>
 					</section>

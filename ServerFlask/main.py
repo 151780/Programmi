@@ -331,8 +331,9 @@ def awningControl(p):
 @app.route('/chatbot', methods=['POST'])
 def getChatbotData():
     atmoEventRequested = request.values["atmoEventRequested"]   # identifico il parametro da mostrare
-    dataOra, atmoEvent = getDataFromDB(atmoEventRequested,1)        # acquisisco il valore dal DB
-    resp = {"valore":atmoEvent[0]}
+    
+    dataList = getDataFromDB(atmoEventRequested,1)        # acquisisco il valore dal DB
+    resp = {"valore":dataList[0][1]}
     return resp
 
 ### ACQUISIZIONE DATI DA RASPBERRY
