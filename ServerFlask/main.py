@@ -41,12 +41,6 @@ app.config['SECRET_KEY'] = secret_key
 login = LoginManager(app)
 login.login_view = '/static/login.html'
 
-# verifico se sono in locale o in cloud
-# if os.path.isfile("./credentials.json"):
-#     local = True
-# else:
-#     local = False
-
 # apertura connessione DB Firestore
 dbName = 'db151780'
 collUsers = 'Users'
