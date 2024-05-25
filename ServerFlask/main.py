@@ -304,7 +304,7 @@ def forecastGraph():
     ds=[]                                         # li passo alla pagina html per mostrare il grafico
     for i in range(len(ascisse)):
         fTime = ascisse[i].strftime("%H:%M:%S")      
-        ds.append([i+1,pioggiaReale[i],pioggiaPrevista[i]])
+        ds.append([fTime,pioggiaReale[i],pioggiaPrevista[i]])
     print(ds)
     return json.dumps(ds),200
 
