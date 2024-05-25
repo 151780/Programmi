@@ -78,7 +78,7 @@ def getModel():
     # recupero il modello dal cloud
     clfName = "rfClass"
     bucketName = "151780-progetto01"        # definisco il nome del bucket di salvataggio in cloud
-    dumpPath=f"./tmp/{clfName}.joblib"      # definisco il path di salvataggio locale del modello
+    dumpPath=f"/tmp/{clfName}.joblib"      # definisco il path di salvataggio locale del modello
     blobName = f"{clfName}.joblib"          # definisco il nome del file di salvataggio sul cloud
 
     csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
@@ -91,7 +91,6 @@ def getModel():
     return rf
 
 rfModel = getModel()                                # variabile contenente il modello di forecasting
-
 
 ### ACQUSIZIONE DATI DAL DB PER GRAFICI
 def getDataFromDB(atmoEv,sPer):
@@ -136,7 +135,7 @@ def saveDataToDB(stID,sTime,sTemp,sHum,sPress,sLight,sRain,fRain,sWind):
 def saveDataToCloudStorage():
     fileName = "MeteoData"
     bucketName = "151780-progetto01"            # definisco il nome del bucket di salvataggio in cloud
-    dumpPath=f"./tmp/{fileName}.csv"            # definisco il path di salvataggio locale
+    dumpPath=f"/tmp/{fileName}.csv"            # definisco il path di salvataggio locale
     blobName = f"{fileName}.csv"                # definisco il nome del file di salvataggio sul cloud
 
     meteoList = meteoStationDB.collection(collMeteo).stream()   # acquisisco i dati dal DB Firestore
@@ -162,7 +161,7 @@ def saveDataToCloudStorage():
 def saveControls(ctrlToRun):
     fileName = "awningControls"
     bucketName = "151780-progetto01"            # definisco il nome del bucket di salvataggio in cloud
-    dumpPath=f"./tmp/{fileName}.txt"            # definisco il path di salvataggio locale
+    dumpPath=f"/tmp/{fileName}.txt"            # definisco il path di salvataggio locale
     blobName = f"{fileName}.txt"                # definisco il nome del file di salvataggio sul cloud
 
     with open(dumpPath,mode='a',newline='') as txtFile:         # creo il file locale
@@ -180,7 +179,7 @@ def saveControls(ctrlToRun):
 def getControls():
     fileName = "awningControls"
     bucketName = "151780-progetto01"            # definisco il nome del bucket di salvataggio in cloud
-    dumpPath=f"./tmp/{fileName}.txt"            # definisco il path di salvataggio locale
+    dumpPath=f"/tmp/{fileName}.txt"            # definisco il path di salvataggio locale
     blobName = f"{fileName}.txt"                # definisco il nome del file di salvataggio sul cloud
 
     csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
@@ -462,6 +461,7 @@ def logout():
 
 
 if __name__ == '__main__':
+
     schedule.every(10).minutes.do(modelRetrain)         # verifica periodica se necessita retrain del modello
     schedule.every(5).minutes.do(saveDataToCloudStorage)         # aggiornamento periodico cloud storage per looker
     app.run(host='0.0.0.0', port=80, debug=False)
