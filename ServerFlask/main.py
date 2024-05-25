@@ -59,7 +59,7 @@ def modelRetrain():
     global modelToRetrain
 
     if modelToRetrain:
-        myProj = "151780-Progetto01"
+        myProj = "progetto01-417313"
         myTopic = "trainRetrainReq"
 
         servAccount = json.load(open("credentials.json"))
