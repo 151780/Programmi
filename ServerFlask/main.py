@@ -292,8 +292,8 @@ def forecastGraph():
     for sampleMeteo in meteoList:                       # per ogni documento nella collezione
         sampleDict = sampleMeteo.to_dict()              # appendo il valore alla lista corrispondente
         ascisse.append(sampleDict["sampleTime"])
-        pioggiaReale.append(sampleDict["rain"]>0)
-        pioggiaPrevista.append(sampleDict[f"rain10"])
+        pioggiaReale.append(int(sampleDict["rain"]>0))
+        pioggiaPrevista.append(int(sampleDict[f"rain10"]))
     ascisse.pop(0)                                      # faccio in modo che la previsione sia allineata al giorno corretto
     pioggiaReale.pop(0)
     pioggiaPrevista.pop(-1)
@@ -305,6 +305,7 @@ def forecastGraph():
     for i in range(len(ascisse)):
         fTime = ascisse[i].strftime("%H:%M:%S")      
         ds.append([i+1,pioggiaReale[i],pioggiaPrevista[i]])
+    print(ds)
     return json.dumps(ds),200
 
 ### GESTIONE COMANDO TENDE
