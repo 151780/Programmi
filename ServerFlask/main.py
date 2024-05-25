@@ -46,6 +46,8 @@ meteoStationDB = firestore.Client.from_service_account_json('credentials.json', 
 
 usersDB = {}
 
+rfModel = {}
+
 # definizione parametri per forecast
 # backwardGap = 10        # indica da quanti passi indietro devo partire per il forecast
 backwardSamples = 1     # indica quanti campioni devo inserire per forecast
