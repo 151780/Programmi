@@ -1,7 +1,6 @@
 import pandas as pd
 from joblib import dump, load
 from google.cloud import firestore, storage
-import os
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import MinMaxScaler
@@ -9,15 +8,13 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, classification_report, accuracy_score
 
 def trainRetrain(event, context, type="retrain"):
-    backwardGap = 10        # indica da quanti passi indietro devo partire per il forecast
     backwardSamples = 1     # indica quanti campioni devo inserire per forecast
-                            # es:   se backwardGap = 10 e backwardSamples = 5
-                            #       considero per il forecast a t le rilevazioni da t-10 a t-6
 
     # apertura connessione DB Firestore
     dbName = 'db151780'
     collMeteo = 'MeteoData'
-    meteoStationDB = firestore.Client.from_service_account_json('credentials.json', database=dbName)
+    # meteoStationDB = firestore.Client.from_service_account_json('credentials.json', database=dbName)
+    meteoStationDB = firestore.Client(database=dbName)
 
     collRef = meteoStationDB.collection(collMeteo)  # acquisisco tutta la collezione dei dati meteo
     docsMeteoData = collRef.stream()
@@ -34,9 +31,9 @@ def trainRetrain(event, context, type="retrain"):
 
     meteoDatadf["rainBool"]=(meteoDatadf["rain"]>0)         # aggiungo la colonna booleana che indica se piove o meno
 
-    columnToRemove=["humidity","pressure","temperature","sampleTime","lighting","rain",f"rain{backwardGap}","stationID"]     # definisco le colonne che non servono per il forecast
+    columnToRemove=["humidity","pressure","temperature","sampleTime","lighting","rain",f"rain10","stationID"]     # definisco le colonne che non servono per il forecast
     meteoDatadf = meteoDatadf.drop(columns=columnToRemove)          # e le rimuovo
-    meteoDatadf = meteoDatadf.iloc[backwardGap:]                    # rimuovo le prime righe che non hanno colonne valide per forecast
+    meteoDatadf = meteoDatadf.iloc[backwardSamples+1:]                    # rimuovo le prime righe che non hanno colonne valide per forecast
 
     # Creo classificatore
     rs=None     # random state per test
@@ -67,7 +64,8 @@ def trainRetrain(event, context, type="retrain"):
 
     dump(rf, dumpPath)                      # salvo in locale il modello
 
-    csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
+    # csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
+    csClient = storage.Client()  # accedo al cloud storage
     gcBucket = csClient.bucket(bucketName)      # scelgo il bucket
     gcBlob = gcBucket.blob(blobName)            # assegno il nome del file di destinazione
     gcBlob.upload_from_filename(dumpPath)       # carico il file sul cloud
