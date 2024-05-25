@@ -6,7 +6,6 @@ from requests import post
 
 from telegram import ForceReply, Update
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
-from datetime import datetime
 
 from secret import bot_token 
 
@@ -14,7 +13,7 @@ parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, parent_dir)
 from vmURL import baseURL
 
-baseURL = 'http://34.154.156.218:80'
+# baseURL = 'http://34.154.156.218:80'
 # baseURL = 'http://192.168.1.50:80'
 
 

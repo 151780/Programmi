@@ -50,7 +50,7 @@ meteoStationDB = firestore.Client.from_service_account_json('credentials.json', 
 usersDB = {}
 
 # definizione parametri per forecast
-backwardGap = 10        # indica da quanti passi indietro devo partire per il forecast
+# backwardGap = 10        # indica da quanti passi indietro devo partire per il forecast
 backwardSamples = 1     # indica quanti campioni devo inserire per forecast
 showPeriods = 50        # indica per quanti periodi devo mostrare i grafici
 accuracyThreshold = 0.8 # indica la soglia sotto la quale devo fare retrain
@@ -102,7 +102,7 @@ def getDataFromDB(atmoEv,sPer):
     qForecast = collRef.order_by("sampleTime", direction=firestore.Query.DESCENDING).limit(sPer)
     meteoList = list(qForecast.stream())                # creo la lista dei documenti da graficare sul forecast
     meteoList.reverse()                                 # inverto la lista perchè ero in descending
-    featData=[]                                             # inizializzo le liste dei dati
+    featData=[]                                         # inizializzo le liste dei dati
 
     for sampleMeteo in meteoList:                       # per ogni documento nella collezione
         sampleDict = sampleMeteo.to_dict()              # appendo il valore alla lista corrispondente
@@ -124,7 +124,7 @@ def saveDataToDB(stID,sTime,sTemp,sHum,sPress,sLight,sRain,fRain):
     docVal["pressure"] = sPress                                     # aggiungo pressione
     docVal["lighting"] = sLight                                     # aggiungo illuminazione
     docVal["rain"] = sRain                                          # aggiungo pioggia
-    docVal[f"rain{backwardGap}"] = fRain                            # aggiungo forecast pioggia
+    docVal["rain10"] = fRain                            # aggiungo forecast pioggia
     print("docVal: ",docVal)
 
     docRef = meteoStationDB.collection(collMeteo).document(docID)   # imposto il documento
@@ -296,7 +296,7 @@ def forecastGraph():
         sampleDict = sampleMeteo.to_dict()              # appendo il valore alla lista corrispondente
         ascisse.append(sampleDict["sampleTime"])
         pioggiaReale.append(sampleDict["rain"]>0)
-        pioggiaPrevista.append(sampleDict[f"rain{backwardGap}"])
+        pioggiaPrevista.append(sampleDict[f"rain10"])
     ascisse.pop(0)                                      # faccio in modo che la previsione sia allineata al giorno corretto
     pioggiaReale.pop(0)
     pioggiaPrevista.pop(-1)
@@ -304,8 +304,11 @@ def forecastGraph():
     if accuracy_score(pioggiaReale, pioggiaPrevista, normalize=True) < accuracyThreshold: # se accuracy si riduce sottosoglia
         modelToRetrain = True
 
-    ds={}
-    return render_template('/static/forecast.html',data=ds)
+    ds=[]                                         # li passo alla pagina html per mostrare il grafico
+    for i in range(len(ascisse)):
+        fTime = ascisse[i].strftime("%H:%M:%S")      
+        ds.append([i+1,pioggiaReale[i],pioggiaPrevista[i]])
+    return json.dumps(ds),200
 
 ### GESTIONE COMANDO TENDE
 @app.route('/controls', methods=['GET'])
