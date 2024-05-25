@@ -8,8 +8,4 @@ google-cloud-pubsub
 google-auth
 scikit-learn
 schedule
-datetime
-json
-time
-os
 csv

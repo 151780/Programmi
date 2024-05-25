@@ -5,10 +5,7 @@ from google.cloud import firestore, storage
 from google.cloud import pubsub_v1
 from google.auth import jwt
 from joblib import load, dump
-import os
-from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import accuracy_score
-from datetime import datetime
 import json
 import schedule
 import csv
