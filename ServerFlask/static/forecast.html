@@ -103,9 +103,10 @@
 						  var data = new google.visualization.DataTable();
 						  data.addColumn('number', 'Time');
 						  data.addColumn('number', 'Rain Forecast');
+						  data.addColumn('number', 'Rain Real');
 						  datav2 = []
 						  for(i=0; i<datav.length;i++)
-						  	datav2.push([datav[i][0],datav[i][1]])
+						  	datav2.push([datav[i][0],datav[i][1],datav[i][2]])
 						  data.addRows(datav2);
 
 						  var options = {
@@ -113,9 +114,9 @@
 							  title: 'Time'
 							},
 							vAxis: {
-							  title: 'Rain Forecast'
+							  title: 'Rain'
 							},
-							legend:'none'
+							// legend:'none'
 						  };
 						  
 						  var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
