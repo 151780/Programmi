@@ -46,8 +46,6 @@ meteoStationDB = firestore.Client.from_service_account_json('credentials.json', 
 
 usersDB = {}
 
-rfModel = {}
-
 # definizione parametri per forecast
 # backwardGap = 10        # indica da quanti passi indietro devo partire per il forecast
 backwardSamples = 1     # indica quanti campioni devo inserire per forecast
@@ -91,6 +89,9 @@ def getModel():
 
     rf = load(dumpPath)                         # salvo in locale il modello
     return rf
+
+rfModel = getModel()                                # variabile contenente il modello di forecasting
+
 
 ### ACQUSIZIONE DATI DAL DB PER GRAFICI
 def getDataFromDB(atmoEv,sPer):
@@ -460,6 +461,5 @@ def logout():
 if __name__ == '__main__':
     schedule.every(10).minutes.do(modelRetrain)         # verifica periodica se necessita retrain del modello
     schedule.every(5).minutes.do(saveDataToCloudStorage)         # aggiornamento periodico cloud storage per looker
-    rfModel = getModel()                                # variabile contenente il modello di forecasting
     app.run(host='0.0.0.0', port=80, debug=False)
 
