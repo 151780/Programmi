@@ -6,3 +6,4 @@ TestForecast.py
 istruzioniLancio.txt
 tmp/
 .gitignore
+updateDB.py
