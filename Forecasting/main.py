@@ -1,4 +1,4 @@
-def trainRetrain(event, context, type=""):
+def trainRetrain(event, context, type=b""):
     import pandas as pd
     from joblib import dump, load
     from google.cloud import firestore, storage
@@ -8,7 +8,7 @@ def trainRetrain(event, context, type=""):
     from sklearn.model_selection import train_test_split
     from sklearn.metrics import confusion_matrix, classification_report, accuracy_score
 
-    if type == "retrain":
+    if type == b"retrain":
         backwardSamples = 1     # indica quanti campioni devo inserire per forecast
 
         # apertura connessione DB Firestore
