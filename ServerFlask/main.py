@@ -105,7 +105,7 @@ def getDataFromDB(atmoEv,sPer):
     return featData
 
 ### SALVATAGGIO DATI SENSORI SU FIRESTORE E SU FILE CSV IN STORAGE PER LOOKER
-def saveDataToDB(stID,sTime,sTemp,sHum,sPress,sLight,sRain,fRain):
+def saveDataToDB(stID,sTime,sTemp,sHum,sPress,sLight,sRain,fRain,sWind):
     sTimeStr = sTime.strftime("%Y-%m-%d-%H:%M:%S:%f")[:-5]
     print("salvataggio dati")
     docID = stID + sTimeStr
@@ -118,6 +118,7 @@ def saveDataToDB(stID,sTime,sTemp,sHum,sPress,sLight,sRain,fRain):
     docVal["pressure"] = sPress                                     # aggiungo pressione
     docVal["lighting"] = sLight                                     # aggiungo illuminazione
     docVal["rain"] = sRain                                          # aggiungo pioggia
+    docVal["wind"] = sWind                                          # aggiungo pioggia
     docVal["rain10"] = fRain                            # aggiungo forecast pioggia
     print("docVal: ",docVal)
 
@@ -348,7 +349,7 @@ def controls():
     return redirect('/static/controls.html')
 
 ### ACQUISIZIONE COMANDO TENDE
-@app.route('/awning/<p>', methods=['GET'])
+@app.route('/awning/<ctrlToRun>', methods=['GET'])
 @login_required
 def awningControl(ctrlToRun):
     saveControls(ctrlToRun)
@@ -366,6 +367,7 @@ def getChatbotData():
 ### ACQUISIZIONE DATI DA RASPBERRY
 @app.route('/raspberry', methods=['POST'])
 def getRaspberryData():
+    global rfModel
     stationID = request.values["stationID"]
     sTime = request.values["sampleTime"]
     temperatureValue = float(request.values["temperature"])
@@ -373,6 +375,7 @@ def getRaspberryData():
     pressureValue = float(request.values["pressure"])
     lightingValue = float(request.values["lighting"])
     rainfallValue = float(request.values["rainfall"])
+    windValue = float(request.values["wind"])
    
     collRef = meteoStationDB.collection(collMeteo)          # definisco la collection da leggere e ne leggo gli ultimi elementi necessari per grafico
     qForecast = collRef.order_by("sampleTime", direction=firestore.Query.DESCENDING).limit(backwardSamples)
@@ -395,7 +398,7 @@ def getRaspberryData():
     # print("P = ",pressureValue)
     # print("L = ",lightingValue)
     # print("R = ",rainfallValue)
-    saveDataToDB(stationID,sTime,temperatureValue,humidityValue,pressureValue,lightingValue,rainfallValue,rainForecast) # salvo i dati sul DB
+    saveDataToDB(stationID,sTime,temperatureValue,humidityValue,pressureValue,lightingValue,rainfallValue,rainForecast,windValue) # salvo i dati sul DB
     controlsToRun = getControls()   # acquisisco i controlli da effettuare sulle tende da inoltrare al Raspberry
     return controlsToRun, 200
 
