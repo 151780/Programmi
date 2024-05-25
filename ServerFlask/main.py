@@ -204,8 +204,8 @@ def rainGraph():
     ds=[]                                         # li passo alla pagina html per mostrare il grafico
     i=1
     for fData in featData:
-        fTime = fData[0].strftime("%H:%M:%S")      
-        ds.append([i,fData[1]])
+        fTime = str(fData[0].strftime("%H:%M:%S"))
+        ds.append([fTime,fData[1]])
         i+=1
     return json.dumps(ds),200
 
