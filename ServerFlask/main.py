@@ -67,7 +67,7 @@ def modelRetrain():
         credentials = jwt.Credentials.from_service_account_info(servAccount, audience=audience)
         publisher = pubsub_v1.PublisherClient(credentials=credentials)
         topic_path = publisher.topic_path(myProj, myTopic)
-        r = publisher.publish(topic_path, b'Retrain model') #, type="retrain")
+        r = publisher.publish(topic_path, b'Retrain model', type=b"retrain")
         print(r.result())
         modelToRetrain = False
 
