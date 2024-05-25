@@ -443,7 +443,11 @@ def login():
         login_user(User(username))                                          # lo porto al menu generale
         return redirect('/static/menu.html')
     
-    return redirect('/static/login.html')               # altrimenti lo riporto a login
+    return render_template('login.html', error='invalid_credentials')               # altrimenti lo riporto a login con errore
+
+@app.route('/login')
+def show_login_form():
+    return render_template('login.html', error='')
 
 ### LOGOUT UTENTE
 @app.route('/logout', methods=["POST"])
