@@ -60,7 +60,7 @@ def modelRetrain():
 
     if modelToRetrain:
         myProj = "151780-Progetto01"
-        myTopic = "retrainreq"
+        myTopic = "trainRetrainReq"
 
         servAccount = json.load(open("credentials.json"))
         audience = "https://pubsub.googleapis.com/google.pubsub.v1.Publisher"

@@ -3,4 +3,3 @@ scikit-learn
 joblib
 google-cloud-firestore
 google-cloud-storage
-os
