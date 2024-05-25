@@ -125,7 +125,7 @@ def saveDataToDB(stID,sTime,sTimeStr,sTemp,sHum,sPress,sLight,sRain,fRain,sWind)
 
     docRef = meteoStationDB.collection(collMeteo).document(docID)   # imposto il documento
     docRef.set(docVal)                                              # e lo scrivo
-    
+
     return 'Data saved',200
 
 ### SALVATAGGIO DATI SENSORI SU FILE CSV IN STORAGE PER LOOKER
@@ -377,14 +377,6 @@ def getRaspberryData():
     rainfallValue = float(request.values["rainfall"])
     windValue = float(request.values["wind"])
 
-    print(stationID,sTime)
-    print(sTimeStr)
-    print("T = ",temperatureValue)
-    print("H = ",humidityValue)
-    print("P = ",pressureValue)
-    print("L = ",lightingValue)
-    print("R = ",rainfallValue)
-    print("W = ",windValue)
        
     collRef = meteoStationDB.collection(collMeteo)          # definisco la collection da leggere e ne leggo gli ultimi elementi necessari per grafico
     qForecast = collRef.order_by("sampleTime", direction=firestore.Query.DESCENDING).limit(backwardSamples)
@@ -397,10 +389,19 @@ def getRaspberryData():
             for feat in featureColList:                     # per ogni feature
                 forecastData[0].append(sampleData[feat])    # appendo alla lista dati
 
-        rainForecast=rfModel.predict(forecastData)[0]       # predico la pioggia
+        rainForecast=int(rfModel.predict(forecastData)[0])       # predico la pioggia
     else:
         rainForecast=0
 
+    print(stationID,sTime)
+    print(sTimeStr)
+    print("T = ",temperatureValue)
+    print("H = ",humidityValue)
+    print("P = ",pressureValue)
+    print("L = ",lightingValue)
+    print("R = ",rainfallValue)
+    print("W = ",windValue)
+    print("F = ", rainForecast)
 
     saveDataToDB(stationID,sTime,sTimeStr,temperatureValue,humidityValue,pressureValue,lightingValue,rainfallValue,rainForecast,windValue) # salvo i dati sul DB
     controlsToRun = getControls()   # acquisisco i controlli da effettuare sulle tende da inoltrare al Raspberry
