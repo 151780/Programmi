@@ -304,6 +304,7 @@ def lightingGraph():
         fTime = str(fData[0].strftime("%H:%M:%S"))
         ds.append([fTime,fData[1]])
         i+=1
+    print(ds)
     return json.dumps(ds),200
 
 ### GRAFICO FORECASTING PIOGGIA
