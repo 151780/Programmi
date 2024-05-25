@@ -82,10 +82,7 @@ def getModel():
     blobName = f"{clfName}.joblib"          # definisco il nome del file di salvataggio sul cloud
 
     csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
-    # if local:
-    #     csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
-    # else:
-    #     csClient = storage.Client()
+
     gcBucket = csClient.bucket(bucketName)      # scelgo il bucket
     gcBlob = gcBucket.blob(blobName)            # assegno il nome del file di destinazione
     gcBlob.download_to_filename(dumpPath)       # scarico il file dal cloud    
@@ -152,14 +149,49 @@ def saveDataToCloudStorage():
             writer.writerow(meteoValues)
 
     csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
-    # if local:
-    #     csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
-    # else:
-    #     csClient = storage.Client()
 
     gcBucket = csClient.bucket(bucketName)      # scelgo il bucket
     gcBlob = gcBucket.blob(blobName)            # assegno il nome del file di destinazione
     gcBlob.upload_from_filename(dumpPath)       # carico il file sul cloud
+
+### SALVATAGGIO RICHIESTE CONTROLLI TENDE
+def saveControls(ctrlToRun):
+    fileName = "awningControls"
+    bucketName = "151780-progetto01"            # definisco il nome del bucket di salvataggio in cloud
+    dumpPath=f"./tmp/{fileName}.txt"            # definisco il path di salvataggio locale
+    blobName = f"{fileName}.txt"                # definisco il nome del file di salvataggio sul cloud
+
+    with open(dumpPath,mode='a',newline='') as txtFile:         # creo il file locale
+        writer = csv.writer(txtFile)
+        writer.writerow(ctrlToRun)
+
+    csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
+
+    gcBucket = csClient.bucket(bucketName)      # scelgo il bucket
+    gcBlob = gcBucket.blob(blobName)            # assegno il nome del file di destinazione
+    gcBlob.upload_from_filename(dumpPath)       # carico il file sul cloud
+    return
+
+### ACQUISIZIONE RICHIESTE CONTROLLI TENDE
+def getControls():
+    fileName = "awningControls"
+    bucketName = "151780-progetto01"            # definisco il nome del bucket di salvataggio in cloud
+    dumpPath=f"./tmp/{fileName}.txt"            # definisco il path di salvataggio locale
+    blobName = f"{fileName}.txt"                # definisco il nome del file di salvataggio sul cloud
+
+    csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
+
+    gcBucket = csClient.bucket(bucketName)      # scelgo il bucket
+    gcBlob = gcBucket.blob(blobName)            # assegno il nome del file di destinazione
+    gcBlob.download_to_filename(dumpPath)       # scarico il file dal cloud    
+    gcBlob.upload_from_string("")               # e lo svuoto
+
+    controlsToRun=""
+    with open(dumpPath,mode='r',newline='') as txtFile:         # creo il file locale
+        for ctrl in txtFile:
+            controlsToRun = controlsToRun + " " + ctrl
+
+    return controlsToRun
 
 ### ACQUISIZIONE DATI UTENTI DA FIRESTORE
 def getUsersDB():
@@ -203,7 +235,7 @@ def rainGraph():
     featData = getDataFromDB("rain",showPeriods)  # acquisisco i dati da DB
     ds=[]                                         # li passo alla pagina html per mostrare il grafico
     i=1
-    for fData in featData:
+    for fData in featData:                        # creo il dataset da inviare alla pagina per il grafico
         fTime = str(fData[0].strftime("%H:%M:%S"))
         ds.append([fTime,fData[1]])
         i+=1
@@ -318,8 +350,8 @@ def controls():
 ### ACQUISIZIONE COMANDO TENDE
 @app.route('/awning/<p>', methods=['GET'])
 @login_required
-def awningControl(p):
-    print("Controllo",p)
+def awningControl(ctrlToRun):
+    saveControls(ctrlToRun)
     return redirect('/static/controls.html')
 
 ### RICHIESTA DATI DA TELEGRAM - OK
@@ -353,21 +385,19 @@ def getRaspberryData():
             for feat in featureColList:                     # per ogni feature
                 forecastData[0].append(sampleData[feat])    # appendo alla lista dati
 
-        # scaler=MinMaxScaler()                               # normalizzo i dati comeda modello
-        # forecastData=scaler.transform(forecastData)
-
         rainForecast=rfModel.predict(forecastData)[0]       # predico la pioggia
     else:
         rainForecast=0
 
-    print(stationID,sTime)
-    print("T = ",temperatureValue)
-    print("H = ",humidityValue)
-    print("P = ",pressureValue)
-    print("L = ",lightingValue)
-    print("R = ",rainfallValue)
-    saveDataToDB(stationID,sTime,temperatureValue,humidityValue,pressureValue,lightingValue,rainfallValue,rainForecast)
-    return "ok", 200
+    # print(stationID,sTime)
+    # print("T = ",temperatureValue)
+    # print("H = ",humidityValue)
+    # print("P = ",pressureValue)
+    # print("L = ",lightingValue)
+    # print("R = ",rainfallValue)
+    saveDataToDB(stationID,sTime,temperatureValue,humidityValue,pressureValue,lightingValue,rainfallValue,rainForecast) # salvo i dati sul DB
+    controlsToRun = getControls()   # acquisisco i controlli da effettuare sulle tende da inoltrare al Raspberry
+    return controlsToRun, 200
 
 ########################## FUNZIONI SERVER FLASK LOGIN
 ### VERIFICA UTENTE
