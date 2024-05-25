@@ -107,8 +107,7 @@ def getDataFromDB(atmoEv,sPer):
     return featData
 
 ### SALVATAGGIO DATI SENSORI SU FIRESTORE E SU FILE CSV IN STORAGE PER LOOKER
-def saveDataToDB(stID,sTime,sTemp,sHum,sPress,sLight,sRain,fRain,sWind):
-    sTimeStr = sTime.strftime("%Y-%m-%d-%H:%M:%S:%f")[:-5]
+def saveDataToDB(stID,sTime,sTimeStr,sTemp,sHum,sPress,sLight,sRain,fRain,sWind):
     print("salvataggio dati")
     docID = stID + sTimeStr
     print("docID: ",docID)
@@ -126,9 +125,7 @@ def saveDataToDB(stID,sTime,sTemp,sHum,sPress,sLight,sRain,fRain,sWind):
 
     docRef = meteoStationDB.collection(collMeteo).document(docID)   # imposto il documento
     docRef.set(docVal)                                              # e lo scrivo
-
-
-
+    
     return 'Data saved',200
 
 ### SALVATAGGIO DATI SENSORI SU FILE CSV IN STORAGE PER LOOKER
@@ -372,6 +369,7 @@ def getRaspberryData():
     global rfModel
     stationID = request.values["stationID"]
     sTime = request.values["sampleTime"]
+    sTimeStr = request.values["sTimeStr"]
     temperatureValue = float(request.values["temperature"])
     humidityValue = float(request.values["humidity"])
     pressureValue = float(request.values["pressure"])
@@ -380,6 +378,7 @@ def getRaspberryData():
     windValue = float(request.values["wind"])
 
     print(stationID,sTime)
+    print(sTimeStr)
     print("T = ",temperatureValue)
     print("H = ",humidityValue)
     print("P = ",pressureValue)
@@ -403,7 +402,7 @@ def getRaspberryData():
         rainForecast=0
 
 
-    saveDataToDB(stationID,sTime,temperatureValue,humidityValue,pressureValue,lightingValue,rainfallValue,rainForecast,windValue) # salvo i dati sul DB
+    saveDataToDB(stationID,sTime,sTimeStr,temperatureValue,humidityValue,pressureValue,lightingValue,rainfallValue,rainForecast,windValue) # salvo i dati sul DB
     controlsToRun = getControls()   # acquisisco i controlli da effettuare sulle tende da inoltrare al Raspberry
     return controlsToRun, 200
 
