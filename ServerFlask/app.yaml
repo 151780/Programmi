@@ -1,7 +1,6 @@
 runtime: python39
 
-resources:
-  memory_gb: 1
+instance_class: F4
 
 handlers:
   - url: '/.*'
