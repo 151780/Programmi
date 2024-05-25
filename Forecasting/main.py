@@ -1,4 +1,4 @@
-def trainRetrain(event, context, type="train"):
+def trainRetrain(event, context, type=""):
     import pandas as pd
     from joblib import dump, load
     from google.cloud import firestore, storage
