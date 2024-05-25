@@ -386,6 +386,7 @@ def getRaspberryData():
     print("P = ",pressureValue)
     print("L = ",lightingValue)
     print("R = ",rainfallValue)
+    print("W = ",windValue)
        
     collRef = meteoStationDB.collection(collMeteo)          # definisco la collection da leggere e ne leggo gli ultimi elementi necessari per grafico
     qForecast = collRef.order_by("sampleTime", direction=firestore.Query.DESCENDING).limit(backwardSamples)
