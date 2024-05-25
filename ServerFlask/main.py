@@ -217,8 +217,8 @@ def humidityGraph():
     ds=[]                                         # li passo alla pagina html per mostrare il grafico
     i=1
     for fData in featData:
-        fTime = fData[0].strftime("%H:%M:%S")      
-        ds.append([i,fData[1]])
+        fTime = str(fData[0].strftime("%H:%M:%S"))
+        ds.append([fTime,fData[1]])
         i+=1
     return json.dumps(ds),200
 
@@ -230,8 +230,8 @@ def temperatureGraph():
     ds=[]                                         # li passo alla pagina html per mostrare il grafico
     i=1
     for fData in featData:
-        fTime = fData[0].strftime("%H:%M:%S")      
-        ds.append([i,fData[1]])
+        fTime = str(fData[0].strftime("%H:%M:%S"))
+        ds.append([fTime,fData[1]])
         i+=1
     return json.dumps(ds),200
 
@@ -243,8 +243,8 @@ def windGraph():
     ds=[]                                         # li passo alla pagina html per mostrare il grafico
     i=1
     for fData in featData:
-        fTime = fData[0].strftime("%H:%M:%S")      
-        ds.append([i,fData[1]])
+        fTime = str(fData[0].strftime("%H:%M:%S"))
+        ds.append([fTime,fData[1]])
         i+=1
     return json.dumps(ds),200
 
@@ -256,8 +256,8 @@ def pressureGraph():
     ds=[]                                         # li passo alla pagina html per mostrare il grafico
     i=1
     for fData in featData:
-        fTime = fData[0].strftime("%H:%M:%S")      
-        ds.append([i,fData[1]])
+        fTime = str(fData[0].strftime("%H:%M:%S"))
+        ds.append([fTime,fData[1]])
         i+=1
     return json.dumps(ds),200
 
@@ -269,8 +269,8 @@ def lightingGraph():
     ds=[]                                         # li passo alla pagina html per mostrare il grafico
     i=1
     for fData in featData:
-        fTime = fData[0].strftime("%H:%M:%S")      
-        ds.append([i,fData[1]])
+        fTime = str(fData[0].strftime("%H:%M:%S"))
+        ds.append([fTime,fData[1]])
         i+=1
     return json.dumps(ds),200
 
@@ -304,7 +304,7 @@ def forecastGraph():
     ds=[]                                         # li passo alla pagina html per mostrare il grafico
     for i in range(len(ascisse)):
         fTime = str(ascisse[i].strftime("%H:%M:%S"))
-        ds.append([fTime,pioggiaReale[i],pioggiaPrevista[i]])
+        ds.append([fTime,pioggiaReale[i]+2,pioggiaPrevista[i]])
     print(ds)
     return json.dumps(ds),200
 
