@@ -379,7 +379,14 @@ def getRaspberryData():
     lightingValue = float(request.values["lighting"])
     rainfallValue = float(request.values["rainfall"])
     windValue = float(request.values["wind"])
-   
+
+    print(stationID,sTime)
+    print("T = ",temperatureValue)
+    print("H = ",humidityValue)
+    print("P = ",pressureValue)
+    print("L = ",lightingValue)
+    print("R = ",rainfallValue)
+       
     collRef = meteoStationDB.collection(collMeteo)          # definisco la collection da leggere e ne leggo gli ultimi elementi necessari per grafico
     qForecast = collRef.order_by("sampleTime", direction=firestore.Query.DESCENDING).limit(backwardSamples)
     meteoList = list(qForecast.stream())                    # creo la lista dei documenti che servono per fare il forecast
@@ -395,12 +402,7 @@ def getRaspberryData():
     else:
         rainForecast=0
 
-    # print(stationID,sTime)
-    # print("T = ",temperatureValue)
-    # print("H = ",humidityValue)
-    # print("P = ",pressureValue)
-    # print("L = ",lightingValue)
-    # print("R = ",rainfallValue)
+
     saveDataToDB(stationID,sTime,temperatureValue,humidityValue,pressureValue,lightingValue,rainfallValue,rainForecast,windValue) # salvo i dati sul DB
     controlsToRun = getControls()   # acquisisco i controlli da effettuare sulle tende da inoltrare al Raspberry
     return controlsToRun, 200
