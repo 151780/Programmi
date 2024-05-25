@@ -1,13 +1,13 @@
-import pandas as pd
-from joblib import dump, load
-from google.cloud import firestore, storage
-
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import confusion_matrix, classification_report, accuracy_score
-
 def retrain(event, context):
+    import pandas as pd
+    from joblib import dump, load
+    from google.cloud import firestore, storage
+
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.preprocessing import MinMaxScaler
+    from sklearn.model_selection import train_test_split
+    from sklearn.metrics import confusion_matrix, classification_report, accuracy_score
+
     backwardSamples = 1     # indica quanti campioni devo inserire per forecast
 
     # apertura connessione DB Firestore
