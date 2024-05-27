@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Login</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <link rel="stylesheet" href="assets/css/main.css" />
+    <noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+</head>
+<body style="background-color: #DEEAF6;">
+    <div id="wrapper" class="divided">
+        <section class="wrapper style1 align-center">
+            <div class="inner">
+                <h1 style="color: #1B1154; font-family: Arial; font-size: 100px">Login</h1>
+                <p style="font-style: italic; font-size: 20px">Please, insert here your username and password.</p>
+                <div class="index align-left">
+                    <section id="contact">
+                        <div class="content">
+                            <section>
+                                <div id="output"></div>
+                                <form method="post" action="{{ url_for('login') }}">
+                                    <div class="fields">
+                                        <div class="field half">
+                                            <label for="username" style="font-size: 20px">Name</label>
+                                            <input type="text" name="username" id="username" style="background-color:#F6F8F8" />
+                                        </div>
+                                        <div class="field half">
+                                            <label for="password" style="font-size: 20px">Password</label>
+                                            <input type="password" name="password" id="password" style="background-color:#F6F8F8" />
+                                        </div>
+                                    </div>
+                                    <ul class="actions">
+                                        <li><input id="submit" type="submit" value="Login" style="font-family: monospace; font-size: 16px; color: #1B1154; background-color: #F6F8F8" /></li>
+                                        <li><input type="reset" value="Clear" style="font-family: monospace; font-size: 16px; color: #1B1154; background-color: #F6F8F8" /></li>
+                                    </ul>
+                                </form>
+                                {% with messages = get_flashed_messages(with_categories=true) %}
+                                    {% if messages %}
+                                        <div id="error" style="color: red; font-size: 20px;">
+                                            {% for category, message in messages %}
+                                                <p>{{ message }}</p>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                {% endwith %}
+                            </section>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </section>
+    </div>
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/js/jquery.scrollex.min.js"></script>
+    <script src="assets/js/jquery.scrolly.min.js"></script>
+    <script src="assets/js/browser.min.js"></script>
+    <script src="assets/js/breakpoints.min.js"></script>
+    <script src="assets/js/util.js"></script>
+    <script src="assets/js/main.js"></script>
+    <script src="assets/js/demo.js"></script>
+</body>
+</html>
+   
