@@ -5,6 +5,9 @@ import time
 import json
 import schedule
 import csv
+from requests import post
+
+from vmURL import baseURL
 
 # apertura connessione DB Firestore
 dbName = 'db151780'
@@ -49,6 +52,8 @@ def modelRetrain():
         topic_path = publisher.topic_path(myProj, myTopic)
         r = publisher.publish(topic_path, b'Retrain model', type=b"retrain")
         print(r.result())
+
+        r = post(f"{baseURL}/model")
     else:
         print(" ***** RETRAINING NOT NEEDED *****")
 

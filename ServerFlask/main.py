@@ -387,7 +387,7 @@ def awningControl(ctrlToRun):
     return redirect('/static/controls.html')
 
 ### RIACQUISIZIONE MODELLO
-@app.route('/model', methods=['GET'])
+@app.route('/model', methods=['POST'])
 @login_required
 def modelReload():
     global rfModel
