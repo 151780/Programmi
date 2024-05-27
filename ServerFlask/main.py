@@ -386,6 +386,14 @@ def awningControl(ctrlToRun):
     saveControls(ctrlToRun)
     return redirect('/static/controls.html')
 
+### RIACQUISIZIONE MODELLO
+@app.route('/model', methods=['GET'])
+@login_required
+def modelReload():
+    global rfModel
+    rfModel=getModel()
+    return "model reloaded", 200
+
 ### RICHIESTA DATI DA TELEGRAM - OK
 @app.route('/chatbot', methods=['POST'])
 def getChatbotData():
@@ -437,7 +445,8 @@ def getRaspberryData():
 
     saveDataToDB(stationID,sTime,sTimeStr,temperatureValue,humidityValue,pressureValue,lightingValue,rainfallValue,rainForecast,windValue) # salvo i dati sul DB
     controlsToRun = getControls()   # acquisisco i controlli da effettuare sulle tende da inoltrare al Raspberry
-    return controlsToRun, 200
+    resp = {"comandi":controlsToRun}
+    return resp, 200
 
 ########################## FUNZIONI SERVER FLASK LOGIN
 ### VERIFICA UTENTE
