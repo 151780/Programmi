@@ -480,7 +480,8 @@ def signup():
             return render_template('sign_up.html')
         
         usersDB = updateUsersDB(username,password1,email)           # altrimenti aggiorno DB
-    return redirect("/static/menu.html")
+        return redirect(url_for('menu'))
+    return render_template('sign_up.html')
 
 ### LOGIN UTENTE
 @app.route('/login', methods=['GET', 'POST'])
