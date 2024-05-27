@@ -241,7 +241,7 @@ def updateUsersDB(username,password,email):
 ### HOME PAGE
 @app.route('/',methods=['GET'])
 def main():
-    return redirect("/static/index.html")
+    return render_template('index.html')
 
 ### MENU GENERALE
 @app.route('/menu', methods=['GET'])
