@@ -479,7 +479,7 @@ def signup():
             flash('e-mail already exists', 'error')
             return render_template('sign_up.html')
         
-    usersDB = updateUsersDB(username,password1,email)           # altrimenti aggiorno DB
+        usersDB = updateUsersDB(username,password1,email)           # altrimenti aggiorno DB
     return redirect("/static/menu.html")
 
 ### LOGIN UTENTE
