@@ -1,6 +1,7 @@
 from google.cloud import firestore, storage
 from google.cloud import pubsub_v1
 from google.auth import jwt
+import time
 import json
 import schedule
 import csv
@@ -18,7 +19,7 @@ def modelRetrain():
 
     fileName = "retrainRequest"
     bucketName = "151780-progetto01"            # definisco il nome del bucket di salvataggio in cloud
-    dumpPath=f"/tmp/{fileName}.txt"            # definisco il path di salvataggio locale
+    dumpPath=f"tmp/{fileName}.txt"            # definisco il path di salvataggio locale
     blobName = f"{fileName}.txt"                # definisco il nome del file di salvataggio sul cloud
 
     csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
@@ -58,7 +59,7 @@ def saveDataToCloudStorage():
     print(" ***** SAVING TO STORAGE *****")
     fileName = "MeteoData"
     bucketName = "151780-progetto01"            # definisco il nome del bucket di salvataggio in cloud
-    dumpPath=f"/tmp/{fileName}.csv"            # definisco il path di salvataggio locale
+    dumpPath=f"tmp/{fileName}.csv"            # definisco il path di salvataggio locale
     blobName = f"{fileName}.csv"                # definisco il nome del file di salvataggio sul cloud
 
     meteoList = meteoStationDB.collection(collMeteo).stream()   # acquisisco i dati dal DB Firestore
@@ -81,11 +82,13 @@ def saveDataToCloudStorage():
     gcBlob.upload_from_filename(dumpPath)       # carico il file sul cloud
 
 
-schedule.every(60).seconds.do(modelRetrain)         # verifica periodica se necessita retrain del modello
-schedule.every(90).seconds.do(saveDataToCloudStorage)         # aggiornamento periodico cloud storage per looker
+schedule.every(5).minutes.do(modelRetrain)         # verifica periodica se necessita retrain del modello
+schedule.every(10).minutes.do(saveDataToCloudStorage)         # aggiornamento periodico cloud storage per looker
+
 
 try:
     while True: # ripeti fino a keypressed
-        i=1
+        schedule.run_pending()
+        time.sleep(60)
 except KeyboardInterrupt:
     pass
