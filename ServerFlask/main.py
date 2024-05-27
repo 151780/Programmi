@@ -36,7 +36,7 @@ class User(UserMixin):
 app = Flask(__name__)
 app.config['SECRET_KEY'] = secret_key
 login = LoginManager(app)
-login.login_view = 'login'
+login.login_view = '/static/login.html'
 
 # apertura connessione DB Firestore
 dbName = 'db151780'
@@ -241,7 +241,7 @@ def updateUsersDB(username,password,email):
 ### HOME PAGE
 @app.route('/',methods=['GET'])
 def main():
-    return render_template('index.html')
+    return redirect("/static/index.html")
 
 ### MENU GENERALE
 @app.route('/menu', methods=['GET'])
@@ -458,51 +458,42 @@ def load_user(username):                # ritorno nome utente se in db altriment
     return None
     
 ### SIGNUP NUOVO UTENTE
-@app.route('/sign_up', methods=['GET', 'POST'])
+@app.route('/sign_up', methods=['POST'])
 def signup():
-    if request.method == 'POST':
-        if current_user.is_authenticated:                           # se utente già autenticato lo porto al menu generale
-            return redirect(url_for('menu'))
-        username = request.values['username']                       # altrimenti acquisisco i dati da pagina html
-        email = request.values['email']
-        password1 = request.values['password1']
-        password2 = request.values['password2']
+    if current_user.is_authenticated:                           # se utente già autenticato lo porto al menu generale
+        return redirect(url_for('/static/menu.html'))
+    username = request.values['username']                       # altrimenti acquisisco i dati da pagina html
+    email = request.values['email']
+    password1 = request.values['password1']
+    password2 = request.values['password2']
 
-        usersDB = getUsersDB()                                      # acquisisco i dati degli utenti registrati
-        if username in usersDB:                                     # se utente o mail già in DB o se password diverse ripropongo
-            flash('Username already exists', 'error')
-            return render_template('sign_up.html')
-        if password1 != password2:
-            flash("Passwords don't match", 'error')
-            return render_template('sign_up.html')
-        if email in [valDict["email"] for valDict in usersDB.values()]:
-            flash('e-mail already exists', 'error')
-            return render_template('sign_up.html')
-        
-        usersDB = updateUsersDB(username,password1,email)           # altrimenti aggiorno DB
-        return redirect(url_for('menu'))
-    return render_template('sign_up.html')
+    usersDB = getUsersDB()                                      # acquisisco i dati degli utenti registrati
+    if username in usersDB:                                     # se utente o mail già in DB o se password diverse ripropongo
+        return redirect('/static/sign_up.html')
+    if password1 != password2:
+        return redirect('/static/sign_up.html')
+    if email in [valDict["email"] for valDict in usersDB.values()]:
+        return redirect('/static/sign_up.html')
+    
+    usersDB = updateUsersDB(username,password1,email)           # altrimenti aggiorno DB
+    return redirect('/static/login.html')
 
 ### LOGIN UTENTE
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/login', methods=['POST'])
 def login():
-    if request.method == 'POST':
-        if current_user.is_authenticated:
-            return redirect(url_for('menu'))
-        
-        username = request.values['username']
-        password = request.values['password']
+    if current_user.is_authenticated:                   # se utente già autenticato lo porto al menu generale
+        return redirect(url_for('/static/menu.html'))
+    username = request.values['username']               # altrimenti acquisisco i dati da pagina html
+    password = request.values['password']
 
-        usersDB = getUsersDB()
-        if username in usersDB and password == usersDB[username]["password"]:
-            login_user(User(username))
-            return redirect(url_for('menu'))
-        
-        flash('Invalid username or password', 'error')
-        return redirect(url_for('login'))
-
-    return render_template('login.html')
-
+    usersDB = getUsersDB()                              # acquisisco i dati degli utenti registrati
+                                                        # (lo devo fare ogni volta perchè se ho più istanze potrei avere aggiornamenti da altre istanze del DB)
+    if username in usersDB and password == usersDB[username]["password"]:   # se registrato e password ok
+        login_user(User(username))                                          # lo porto al menu generale
+        return redirect('/static/menu.html')
+    
+    flash('Invalid username or password', 'error')
+    return redirect('/static/login.html')               # altrimenti lo riporto a login con errore
 
 ### LOGOUT UTENTE
 @app.route('/logout', methods=["POST"])

@@ -60,15 +60,7 @@
 													background-color: #F6F8F8" /></li>
 											</ul>
 										</form>
-										{% with messages = get_flashed_messages(with_categories=true) %}
-											{% if messages %}
-												<div id="error" style="color: red; font-size: 20px;">
-													{% for category, message in messages %}
-														<p>{{ message }}</p>
-													{% endfor %}
-												</div>
-											{% endif %}
-										{% endwith %}
+										<div id="error" style="color: red; font-size: 20px;"></div>
 									</section>
 		
 								</div>
