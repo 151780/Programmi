@@ -492,6 +492,7 @@ def login():
         login_user(User(username))                                          # lo porto al menu generale
         return redirect('/static/menu.html')
     
+    flash('Invalid username or password', 'error')
     return redirect('/static/login.html')               # altrimenti lo riporto a login con errore
 
 ### LOGOUT UTENTE

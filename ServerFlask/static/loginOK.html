@@ -83,16 +83,15 @@
 		<!-- Note: Only needed for demo purposes. Delete for production sites. -->
 			<script src="assets/js/demo.js"></script>
 
-	<script>
-    // Funzione per mostrare l'errore
-    window.onload = function() {
-        var errorMessage = document.getElementById('error_message');
-        if (errorMessage && errorMessage.value === 'invalid_credentials') {
-            document.getElementById('error').textContent = 'Invalid username or password';
-        }
-    }
-	</script>
-
+			<script>
+				// Funzione per mostrare l'errore
+				window.onload = function() {
+					var errorMessage = document.getElementById('error_message').value;
+					if (errorMessage === 'invalid_credentials') {
+						document.getElementById('error').textContent = 'Invalid username or password';
+					}
+				}
+			</script>
 	</body>
 
 </html>

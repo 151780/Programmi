@@ -11,7 +11,7 @@ from requests import post, get
 from datetime import datetime
 from secret import bot_token, chat_id
 
-# baseURL = 'http://34.154.156.218:80'
+# baseURL = 'http://34.154.241.138:80'
 # baseURL = "http://192.168.1.50:80"
 baseURL = "https://progetto01-417313.oa.r.appspot.com"
 
@@ -129,6 +129,9 @@ def getStatus(wStConst):
     sTimeStr = sTime.strftime("%Y-%m-%d-%H:%M:%S.%f")[:-5]
     # sampleTime = sTime.strftime("%H:%M:%S")
     
+    print("sTime: ",sTime)
+    print("sTimeStr: ",sTimeStr)
+    
     dataVal={"stationID":"stazione",
             "sTimeStr":sTimeStr,
             "sampleTime":sTime,
@@ -142,7 +145,8 @@ def getStatus(wStConst):
     r = post(f'{baseURL}/raspberry',data=dataVal)
     
     print(r)
-    print(r.content)
+    print(r.json())
+    # print(r.text)
 
     
     # segnalo al bot Telegram che sta piovendo
@@ -217,7 +221,7 @@ bmp.sea_level_pressure = 1013
 # acquisisco la prima volta
 getStatus(weatherStationConst)
 # schedulazione acquisizione ogni 10 secondi
-schedule.every(10).seconds.do(getStatus,weatherStationConst)
+schedule.every(20).seconds.do(getStatus,weatherStationConst)
 
 releRitraiTenda.toggle()
 try:

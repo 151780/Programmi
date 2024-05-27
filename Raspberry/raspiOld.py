@@ -11,10 +11,9 @@ from requests import post, get
 from datetime import datetime
 from secret import bot_token, chat_id
 
-from vmURL import baseURL
 # baseURL = 'http://34.154.156.218:80'
 # baseURL = "http://192.168.1.50:80"
-
+baseURL = "https://progetto01-417313.oa.r.appspot.com"
 
 ############ ACQUISIZIONE DHT11
 def getDHT11(dht11,wStConst):
@@ -110,43 +109,51 @@ def ritraiTendaStop():
 
 ############ ACQUISIZIONE E GESTIONE DEI DATI DEI SENSORI
 def getStatus(wStConst):
-    global windTic, itsRaining
+    global windTic, itsRaining, sTime, oldsTime
+    
+    sTime=datetime.now()
+    elapsedTime=(sTime-oldsTime).total_seconds()
+    oldsTime=sTime
+    wind = (windTic * spinAnem)/elapsedTime
     print("----------------------------------------")
     print("Tenda ritratta:\t",fcTendaRitratta.is_active)
     print("Tenda estesa:\t",fcTendaEstesa.is_active)
     print("Tic anemometro:\t",windTic)
+    print("Tempo anemometro:\t",elapsedTime)
+    print("Velocità anemometro:\t",wind)
     temperatureDHT, humidity = getDHT11(dht11,wStConst)
     temperatureBMP,pressure,altitude,photoResValue,photoResVolt,lighting,rainSensorValue,rainSensorVolt,rainfall = getADS1015_BMP180(i2c,ads,bmp,wStConst)
     print("----------------------------------------")
     print()
 
-
-    sTime=datetime.now()
-    print(sTime)
-    # sTimeStr = sTime.strftime("%Y-%m-%d-%H:%M:%S:%f")[:-5]
-    # print(sTimeStr)
-
+    sTimeStr = sTime.strftime("%Y-%m-%d-%H:%M:%S.%f")[:-5]
+    # sampleTime = sTime.strftime("%H:%M:%S")
+    
     dataVal={"stationID":"stazione",
-            # "sampleTime":sTimeStr,
+            "sTimeStr":sTimeStr,
             "sampleTime":sTime,
             "temperature":temperatureBMP,
             "humidity":humidity,
             "pressure":pressure,
             "lighting":lighting,
-            "rainfall":rainfall}
+            "rainfall":rainfall,
+             "wind":wind}
 
-    r = post(f'{baseURL}/raspberry',
-                data=dataVal)
+    r = post(f'{baseURL}/raspberry',data=dataVal)
+    
+    print(r)
+    print(r.content)
 
     
     # segnalo al bot Telegram che sta piovendo
-    if rainfall>0 and not itsRaining:
-        chatID = wStConst["chatID"]
-        botToken = wStConst["botToken"]
-        message = "STA PIOVENDO!"
-        url = f"https://api.telegram.org/bot{botToken}/sendMessage?chat_id={chatID}&text={message}"
-        get(url).json()
-        itsRaining=True
+    if rainfall>0:
+        if not itsRaining:
+            chatID = wStConst["chatID"]
+            botToken = wStConst["botToken"]
+            message = "STA PIOVENDO!"
+            url = f"https://api.telegram.org/bot{botToken}/sendMessage?chat_id={chatID}&text={message}"
+            get(url).json()
+            itsRaining=True
     else:
         itsRaining=False
         
@@ -160,6 +167,10 @@ fcTendaEstesa = Button(21, pull_up=True)
 # inizializzazione input pin - anemometro
 anemometro = Button(24, pull_up=True)
 windTic = 0
+radiusAnem = 0.05 # 50 mm
+spinAnem = radiusAnem * 2 * 3.1415	# circonferenza
+sTime = datetime.now()
+oldsTime = sTime
 
 # inizializzazione output pin - ritrai tenda
 releRitraiTenda = LED(19)
