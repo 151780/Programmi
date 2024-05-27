@@ -458,25 +458,29 @@ def load_user(username):                # ritorno nome utente se in db altriment
     return None
     
 ### SIGNUP NUOVO UTENTE
-@app.route('/sign_up', methods=['POST'])
+@app.route('/sign_up', methods=['GET', 'POST'])
 def signup():
-    if current_user.is_authenticated:                           # se utente già autenticato lo porto al menu generale
-        return redirect(url_for('/static/menu.html'))
-    username = request.values['username']                       # altrimenti acquisisco i dati da pagina html
-    email = request.values['email']
-    password1 = request.values['password1']
-    password2 = request.values['password2']
+    if request.method == 'POST':
+        if current_user.is_authenticated:                           # se utente già autenticato lo porto al menu generale
+            return redirect(url_for('menu'))
+        username = request.values['username']                       # altrimenti acquisisco i dati da pagina html
+        email = request.values['email']
+        password1 = request.values['password1']
+        password2 = request.values['password2']
 
-    usersDB = getUsersDB()                                      # acquisisco i dati degli utenti registrati
-    if username in usersDB:                                     # se utente o mail già in DB o se password diverse ripropongo
-        return redirect(url_for('login'))
-    if password1 != password2:
-        return redirect(url_for('login'))
-    if email in [valDict["email"] for valDict in usersDB.values()]:
-        return redirect(url_for('login'))
-    
-    usersDB = updateUsersDB(username,password1,email)           # altrimenti aggiorno DB
-    return redirect(url_for('login'))
+        usersDB = getUsersDB()                                      # acquisisco i dati degli utenti registrati
+        if username in usersDB:                                     # se utente o mail già in DB o se password diverse ripropongo
+            flash('Username already exists', 'error')
+            return render_template('sign_up.html')
+        if password1 != password2:
+            flash("Passwords don't match", 'error')
+            return render_template('sign_up.html')
+        if email in [valDict["email"] for valDict in usersDB.values()]:
+            flash('e-mail already exists', 'error')
+            return render_template('sign_up.html')
+        
+        usersDB = updateUsersDB(username,password1,email)           # altrimenti aggiorno DB
+    return redirect(url_for('menu'))
 
 ### LOGIN UTENTE
 @app.route('/login', methods=['GET', 'POST'])
