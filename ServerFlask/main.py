@@ -74,6 +74,12 @@ modelToRetrain = False  # variabile globale per segnalazione di retrain necessar
 
         return """
 
+def gogogo():
+    print("GOGOGOGOGOGGOGO")
+
+schedule.every(60).seconds.do(gogogo)         # verifica periodica se necessita retrain del modello
+
+
 #### ACQUISIZIONE MODELLO DA CLOUD ####
 def getModel():
     # recupero il modello dal cloud
@@ -337,7 +343,8 @@ def lightingGraph():
 @app.route('/forecast', methods=['GET'])
 @login_required
 def forecastGraph():
-    global modelToRetrain
+    global rfModel
+    rfModel = getModel()
 
     print("Grafico forecast pioggia")
     collRef = meteoStationDB.collection(collMeteo)      # definisco la collection da leggere e ne leggo gli ultimi elementi necessari per grafico
