@@ -74,12 +74,6 @@ modelToRetrain = False  # variabile globale per segnalazione di retrain necessar
 
         return """
 
-def gogogo():
-    print("GOGOGOGOGOGGOGO")
-
-schedule.every(60).seconds.do(gogogo)         # verifica periodica se necessita retrain del modello
-
-
 #### ACQUISIZIONE MODELLO DA CLOUD ####
 def getModel():
     # recupero il modello dal cloud
@@ -95,6 +89,7 @@ def getModel():
     gcBlob.download_to_filename(dumpPath)       # scarico il file dal cloud    
 
     rf = load(dumpPath)                         # salvo in locale il modello
+    print("Modello riacquisito")
     return rf
 
 rfModel = getModel()                                # variabile contenente il modello di forecasting
@@ -365,6 +360,8 @@ def forecastGraph():
     pioggiaPrevista.pop(-1)
 
     if accuracy_score(pioggiaReale, pioggiaPrevista, normalize=True) < accuracyThreshold: # se accuracy si riduce sottosoglia
+        setModelToRetrain()
+    else:
         setModelToRetrain()
 
     ds=[]                                         # li passo alla pagina html per mostrare il grafico
