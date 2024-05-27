@@ -48,7 +48,6 @@ def modelRetrain():
         topic_path = publisher.topic_path(myProj, myTopic)
         r = publisher.publish(topic_path, b'Retrain model', type=b"retrain")
         print(r.result())
-        modelToRetrain = False
     else:
         print(" ***** RETRAINING NOT NEEDED *****")
 
@@ -85,3 +84,8 @@ def saveDataToCloudStorage():
 schedule.every(60).minutes.do(modelRetrain)         # verifica periodica se necessita retrain del modello
 schedule.every(90).seconds.do(saveDataToCloudStorage)         # aggiornamento periodico cloud storage per looker
 
+try:
+    while True: # ripeti fino a keypressed
+        i=1
+except KeyboardInterrupt:
+    pass
