@@ -361,8 +361,8 @@ def forecastGraph():
 
     if accuracy_score(pioggiaReale, pioggiaPrevista, normalize=True) < accuracyThreshold: # se accuracy si riduce sottosoglia
         setModelToRetrain()
-    else:
-        setModelToRetrain()
+    # else:
+    #     setModelToRetrain()
 
     ds=[]                                         # li passo alla pagina html per mostrare il grafico
     for i in range(len(ascisse)):

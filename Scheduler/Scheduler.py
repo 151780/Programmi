@@ -81,7 +81,7 @@ def saveDataToCloudStorage():
     gcBlob.upload_from_filename(dumpPath)       # carico il file sul cloud
 
 
-schedule.every(60).minutes.do(modelRetrain)         # verifica periodica se necessita retrain del modello
+schedule.every(60).seconds.do(modelRetrain)         # verifica periodica se necessita retrain del modello
 schedule.every(90).seconds.do(saveDataToCloudStorage)         # aggiornamento periodico cloud storage per looker
 
 try:
