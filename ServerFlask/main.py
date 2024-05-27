@@ -446,7 +446,7 @@ def getRaspberryData():
     saveDataToDB(stationID,sTime,sTimeStr,temperatureValue,humidityValue,pressureValue,lightingValue,rainfallValue,rainForecast,windValue) # salvo i dati sul DB
     controlsToRun = getControls()   # acquisisco i controlli da effettuare sulle tende da inoltrare al Raspberry
     resp = {"comandi":controlsToRun}
-    return resp, 200
+    return resp
 
 ########################## FUNZIONI SERVER FLASK LOGIN
 ### VERIFICA UTENTE
