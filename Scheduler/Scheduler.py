@@ -54,7 +54,7 @@ def modelRetrain():
 
         return
 
-### SALVATAGGIO DATI SENSORI SU FILE CSV IN STORAGE PER LOOKER
+### SALVATAGGIO DATI SENSORI SU FILE CSV IN STORAGE PER LOOKER #
 def saveDataToCloudStorage():
     print(" ***** SAVING TO STORAGE *****")
     fileName = "MeteoData"
