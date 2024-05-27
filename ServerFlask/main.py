@@ -55,7 +55,7 @@ modelToRetrain = False  # variabile globale per segnalazione di retrain necessar
 
 ########################## FUNZIONI DI SERVIZIO ##########################
 #### INVIO RICHIESTA DI RETRAIN CON PUBSUB
-def modelRetrain():
+""" def modelRetrain():
     global modelToRetrain
     print(" ***** RETRAINING *****")
 
@@ -72,7 +72,7 @@ def modelRetrain():
         print(r.result())
         modelToRetrain = False
 
-        return
+        return """
 
 #### ACQUISIZIONE MODELLO DA CLOUD ####
 def getModel():
@@ -130,7 +130,7 @@ def saveDataToDB(stID,sTime,sTimeStr,sTemp,sHum,sPress,sLight,sRain,fRain,sWind)
     return 'Data saved',200
 
 ### SALVATAGGIO DATI SENSORI SU FILE CSV IN STORAGE PER LOOKER
-def saveDataToCloudStorage():
+""" def saveDataToCloudStorage():
     print(" ***** SAVING TO STORAGE *****")
     fileName = "MeteoData"
     bucketName = "151780-progetto01"            # definisco il nome del bucket di salvataggio in cloud
@@ -154,7 +154,7 @@ def saveDataToCloudStorage():
 
     gcBucket = csClient.bucket(bucketName)      # scelgo il bucket
     gcBlob = gcBucket.blob(blobName)            # assegno il nome del file di destinazione
-    gcBlob.upload_from_filename(dumpPath)       # carico il file sul cloud
+    gcBlob.upload_from_filename(dumpPath)       # carico il file sul cloud """
 
 ### SALVATAGGIO RICHIESTE CONTROLLI TENDE
 def saveControls(ctrlToRun):
@@ -166,6 +166,24 @@ def saveControls(ctrlToRun):
     with open(dumpPath,mode='a',newline='') as txtFile:         # creo il file locale
         writer = csv.writer(txtFile)
         writer.writerow(ctrlToRun)
+
+    csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
+
+    gcBucket = csClient.bucket(bucketName)      # scelgo il bucket
+    gcBlob = gcBucket.blob(blobName)            # assegno il nome del file di destinazione
+    gcBlob.upload_from_filename(dumpPath)       # carico il file sul cloud
+    return
+
+### SALVATAGGIO RICHIESTA RETRAIN
+def setModelToRetrain():
+    fileName = "retrainRequest"
+    bucketName = "151780-progetto01"            # definisco il nome del bucket di salvataggio in cloud
+    dumpPath=f"/tmp/{fileName}.txt"            # definisco il path di salvataggio locale
+    blobName = f"{fileName}.txt"                # definisco il nome del file di salvataggio sul cloud
+
+    with open(dumpPath,mode='a',newline='') as txtFile:         # creo il file locale
+        writer = csv.writer(txtFile)
+        writer.writerow("retrain")
 
     csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
 
@@ -340,7 +358,7 @@ def forecastGraph():
     pioggiaPrevista.pop(-1)
 
     if accuracy_score(pioggiaReale, pioggiaPrevista, normalize=True) < accuracyThreshold: # se accuracy si riduce sottosoglia
-        modelToRetrain = True
+        setModelToRetrain()
 
     ds=[]                                         # li passo alla pagina html per mostrare il grafico
     for i in range(len(ascisse)):
@@ -471,8 +489,5 @@ def logout():
 
 
 if __name__ == '__main__':
-
-    schedule.every(30).seconds.do(modelRetrain)         # verifica periodica se necessita retrain del modello
-    schedule.every(45).seconds.do(saveDataToCloudStorage)         # aggiornamento periodico cloud storage per looker
     app.run(host='0.0.0.0', port=80, debug=False)
 
