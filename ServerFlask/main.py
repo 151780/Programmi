@@ -103,7 +103,7 @@ def getDataFromDB(atmoEv,sPer):
 
     for sampleMeteo in meteoList:                       # per ogni documento nella collezione
         sampleDict = sampleMeteo.to_dict()              # appendo il valore alla lista corrispondente
-        featData.append((sampleDict["sampleTime"][:-6],sampleDict[atmoEv]))
+        featData.append((sampleDict["sampleTime"][:-7],sampleDict[atmoEv]))
    
     return featData
 
