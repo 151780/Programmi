@@ -57,6 +57,7 @@ modelToRetrain = False  # variabile globale per segnalazione di retrain necessar
 #### INVIO RICHIESTA DI RETRAIN CON PUBSUB
 def modelRetrain():
     global modelToRetrain
+    print(" ***** RETRAINING *****")
 
     if modelToRetrain:
         myProj = "progetto01-417313"
@@ -102,7 +103,7 @@ def getDataFromDB(atmoEv,sPer):
 
     for sampleMeteo in meteoList:                       # per ogni documento nella collezione
         sampleDict = sampleMeteo.to_dict()              # appendo il valore alla lista corrispondente
-        featData.append((sampleDict["sampleTime"],sampleDict[atmoEv]))
+        featData.append((sampleDict["sampleTime"][:-6],sampleDict[atmoEv]))
    
     return featData
 
@@ -130,6 +131,7 @@ def saveDataToDB(stID,sTime,sTimeStr,sTemp,sHum,sPress,sLight,sRain,fRain,sWind)
 
 ### SALVATAGGIO DATI SENSORI SU FILE CSV IN STORAGE PER LOOKER
 def saveDataToCloudStorage():
+    print(" ***** SAVING TO STORAGE *****")
     fileName = "MeteoData"
     bucketName = "151780-progetto01"            # definisco il nome del bucket di salvataggio in cloud
     dumpPath=f"/tmp/{fileName}.csv"            # definisco il path di salvataggio locale
@@ -470,7 +472,7 @@ def logout():
 
 if __name__ == '__main__':
 
-    schedule.every(10).minutes.do(modelRetrain)         # verifica periodica se necessita retrain del modello
-    schedule.every(5).minutes.do(saveDataToCloudStorage)         # aggiornamento periodico cloud storage per looker
+    schedule.every(30).seconds.do(modelRetrain)         # verifica periodica se necessita retrain del modello
+    schedule.every(45).seconds.do(saveDataToCloudStorage)         # aggiornamento periodico cloud storage per looker
     app.run(host='0.0.0.0', port=80, debug=False)
 
