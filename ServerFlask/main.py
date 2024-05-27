@@ -479,8 +479,8 @@ def signup():
             flash('e-mail already exists', 'error')
             return render_template('sign_up.html')
         
-        usersDB = updateUsersDB(username,password1,email)           # altrimenti aggiorno DB
-    return redirect(url_for('menu'))
+    usersDB = updateUsersDB(username,password1,email)           # altrimenti aggiorno DB
+    return redirect("/static/menu.html")
 
 ### LOGIN UTENTE
 @app.route('/login', methods=['GET', 'POST'])
