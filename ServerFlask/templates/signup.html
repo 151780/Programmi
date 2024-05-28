@@ -86,18 +86,30 @@
 												</form>
 												{% with messages = get_flashed_messages(with_categories=true) %}
 													{% if messages %}
-														<div id="error" style="color: red; font-size: 20px;font-weight: bold;position: relative; top: -80px; left: 350px;">
-															{% for category, message in messages %}
-																<p>{{ message }}</p>
-															{% endfor %}
-														</div>
-														<audio id="errorSound" src="static/sounds/notify.mp3" preload="auto"></audio>
-														<script>
-															document.getElementById('errorSound').play();
-														</script>
+														{% for category, message in messages %}
+															{% if category == 'error' %}
+																<div class="message error" style="color: red; font-size: 20px; font-weight: bold; position: relative; top: -80px; left: 350px;">
+																	<p>{{ message }}</p>
+																</div>
+																<audio id="errorSound" src="static/sounds/error.mp3" preload="auto"></audio>
+															{% elif category == 'notify' %}
+																<div class="message notify" style="color: green; font-size: 20px; font-weight: bold; position: relative; top: -80px; left: 350px;">
+																	<p>{{ message }}</p>
+																</div>
+																<audio id="notifySound" src="static/sounds/notify.mp3" preload="auto"></audio>
+															{% endif %}
+														{% endfor %}
+														
+														{% for category, message in messages %}
+															{% if category == 'error' %}
+																<script> document.getElementById('errorSound').play(); </script>
+															{% elif category == 'notify' %}
+																<script> document.getElementById('notifySound').play(); </script>
+															{% endif %}
+														{% endfor %}
 													{% endif %}
 												{% endwith %}
-											</section>
+														</section>
 										</div>
 									</section>
 						</div>
