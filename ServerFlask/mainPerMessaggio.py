@@ -222,7 +222,7 @@ def getUsersDB():
     return usersDB
     
 ### AGGIORNAMENTO DATI UTENTI SU FIRESTORE ON SIGNUP
-def updateUsersDB(username,password,email):
+def updateUsersDB(username,password,email,usersDB):
     docVal={}
     docVal["username"] = username                   # aggiungo username
     docVal["password"] = password                   # aggiungo password
@@ -479,7 +479,7 @@ def signup():
             flash('e-mail already exists', 'error')
             return render_template('signup.html')
         
-        usersDB = updateUsersDB(username,password1,email)           # altrimenti aggiorno DB
+        usersDB = updateUsersDB(username,password1,email,usersDB)           # altrimenti aggiorno DB
         return redirect(url_for('login'))
     return render_template('signup.html')
 
