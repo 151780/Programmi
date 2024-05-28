@@ -233,7 +233,6 @@ def updateUsersDB(username,password,email,usersDB):
     docRef.set(docVal)                                              # e lo scrivo
  
     usersDB[username] = {"password": password,"email": email}
-    print(usersDB)
     usersDB=getUsersDB()                            # riacquisco il DB completo (più istanze contemporaneamente possibili)
     return usersDB
 
@@ -331,7 +330,6 @@ def lightingGraph():
         fTime = fData[0][11:]
         ds.append([fTime,fData[1]])
         i+=1
-    print(ds)
     return json.dumps(ds),200
 
 ### GRAFICO FORECASTING PIOGGIA
