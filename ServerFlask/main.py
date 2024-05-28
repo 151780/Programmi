@@ -36,7 +36,7 @@ class User(UserMixin):
 app = Flask(__name__)
 app.config['SECRET_KEY'] = secret_key
 login = LoginManager(app)
-login.login_view = '/static/login.html'
+login.login_view = 'login'
 
 # apertura connessione DB Firestore
 dbName = 'db151780'
@@ -222,7 +222,7 @@ def getUsersDB():
     return usersDB
     
 ### AGGIORNAMENTO DATI UTENTI SU FIRESTORE ON SIGNUP
-def updateUsersDB(username,password,email):
+def updateUsersDB(username,password,email,usersDB):
     docVal={}
     docVal["username"] = username                   # aggiungo username
     docVal["password"] = password                   # aggiungo password
@@ -233,15 +233,14 @@ def updateUsersDB(username,password,email):
     docRef.set(docVal)                                              # e lo scrivo
  
     usersDB[username] = {"password": password,"email": email}
-    print(usersDB)
     usersDB=getUsersDB()                            # riacquisco il DB completo (più istanze contemporaneamente possibili)
     return usersDB
 
 ########################## FUNZIONI SERVER FLASK GENERALI ##########################
 ### HOME PAGE
-@app.route('/',methods=['GET'])
+@app.route('/', methods=['GET', 'POST'])
 def main():
-    return redirect("/static/index.html")
+    return render_template('index.html')
 
 ### MENU GENERALE
 @app.route('/menu', methods=['GET'])
@@ -258,7 +257,7 @@ def rainGraph():
     i=1
     for fData in featData:                        # creo il dataset da inviare alla pagina per il grafico
         # fTime = str(fData[0].strftime("%H:%M:%S"))
-        fTime = fData[0]
+        fTime = fData[0][11:]
         ds.append([fTime,fData[1]])
         i+=1
     return json.dumps(ds),200
@@ -272,7 +271,7 @@ def humidityGraph():
     i=1
     for fData in featData:
         # fTime = str(fData[0].strftime("%H:%M:%S"))
-        fTime = fData[0]
+        fTime = fData[0][11:]
         ds.append([fTime,fData[1]])
         i+=1
     return json.dumps(ds),200
@@ -286,7 +285,7 @@ def temperatureGraph():
     i=1
     for fData in featData:
         # fTime = str(fData[0].strftime("%H:%M:%S"))
-        fTime = fData[0]
+        fTime = fData[0][11:]
         ds.append([fTime,fData[1]])
         i+=1
     return json.dumps(ds),200
@@ -300,7 +299,7 @@ def windGraph():
     i=1
     for fData in featData:
         # fTime = str(fData[0].strftime("%H:%M:%S"))
-        fTime = fData[0]
+        fTime = fData[0][11:]
         ds.append([fTime,fData[1]])
         i+=1
     return json.dumps(ds),200
@@ -314,7 +313,7 @@ def pressureGraph():
     i=1
     for fData in featData:
         # fTime = str(fData[0].strftime("%H:%M:%S"))
-        fTime = fData[0]
+        fTime = fData[0][11:]
         ds.append([fTime,fData[1]])
         i+=1
     return json.dumps(ds),200
@@ -328,10 +327,9 @@ def lightingGraph():
     i=1
     for fData in featData:
         # fTime = str(fData[0].strftime("%H:%M:%S"))
-        fTime = fData[0]
+        fTime = fData[0][11:]
         ds.append([fTime,fData[1]])
         i+=1
-    print(ds)
     return json.dumps(ds),200
 
 ### GRAFICO FORECASTING PIOGGIA
@@ -367,7 +365,7 @@ def forecastGraph():
     ds=[]                                         # li passo alla pagina html per mostrare il grafico
     for i in range(len(ascisse)):
         # fTime = str(fData[0].strftime("%H:%M:%S"))
-        fTime = str(ascisse[i])
+        fTime = str(ascisse[i])[11:]
         ds.append([fTime,pioggiaReale[i]+2,pioggiaPrevista[i]])
     print(ds)
     return json.dumps(ds),200
@@ -396,22 +394,16 @@ def modelReload():
 
 ### RICHIESTA DATI DA TELEGRAM - OK
 @app.route('/chatbot', methods=['POST'])
-def chatbot():
+def getChatbotData():
     atmoEventRequested = request.values["atmoEventRequested"]   # identifico il parametro da mostrare
-    graphToSend = request.values["graph"]                       # verifico se è richiesto un grafico
-    numSamples = int(request.values["numSamples"])
     
-    if graphToSend:
-        dataList = getDataFromDB(atmoEventRequested,numSamples)        # acquisisco i valori dal DB
-        resp = {"valore":dataList}
-    else:
-        dataList = getDataFromDB(atmoEventRequested,numSamples)        # acquisisco il valore dal DB
-        resp = {"valore":dataList[0][1]}
+    dataList = getDataFromDB(atmoEventRequested,1)        # acquisisco il valore dal DB
+    resp = {"valore":dataList[0][1]}
     return resp
 
 ### ACQUISIZIONE DATI DA RASPBERRY
 @app.route('/raspberry', methods=['POST'])
-def raspberry():
+def getRaspberryData():
     global rfModel
     stationID = request.values["stationID"]
     sTime = request.values["sampleTime"]
@@ -464,48 +456,61 @@ def load_user(username):                # ritorno nome utente se in db altriment
     return None
     
 ### SIGNUP NUOVO UTENTE
-@app.route('/sign_up', methods=['POST'])
+@app.route('/signup', methods=['GET', 'POST'])
 def signup():
-    if current_user.is_authenticated:                           # se utente già autenticato lo porto al menu generale
-        return redirect(url_for('/static/menu.html'))
-    username = request.values['username']                       # altrimenti acquisisco i dati da pagina html
-    email = request.values['email']
-    password1 = request.values['password1']
-    password2 = request.values['password2']
+    if request.method == 'POST':
+        if current_user.is_authenticated:                           # se utente già autenticato lo porto al menu generale
+            return redirect(url_for('menu'))
+        username = request.values['username']                       # altrimenti acquisisco i dati da pagina html
+        email = request.values['email']
+        password1 = request.values['password1']
+        password2 = request.values['password2']
 
-    usersDB = getUsersDB()                                      # acquisisco i dati degli utenti registrati
-    if username in usersDB:                                     # se utente o mail già in DB o se password diverse ripropongo
-        return redirect('/static/sign_up.html')
-    if password1 != password2:
-        return redirect('/static/sign_up.html')
-    if email in [valDict["email"] for valDict in usersDB.values()]:
-        return redirect('/static/sign_up.html')
-    
-    usersDB = updateUsersDB(username,password1,email)           # altrimenti aggiorno DB
-    return redirect('/static/login.html')
+        usersDB = getUsersDB()                                      # acquisisco i dati degli utenti registrati
+        if username == "" or password1 == "" or email == "":        # dse non ho compilato tutti i campi
+            flash('Fill in all fields', 'error')
+            return render_template('signup.html')
+        if email in [valDict["email"] for valDict in usersDB.values()]: # se mail già usata segnalo e richiedo
+            flash('e-mail already exists', 'error')
+            return render_template('signup.html')
+        if username in usersDB:                                     # se l'utente esiste già
+            flash('Username already exists', 'error')
+            return render_template('signup.html')
+        if password1 != password2:                                  # se le 2 password non sono uguali
+            flash("Passwords don't match", 'error')
+            return render_template('signup.html')
+        
+        usersDB = updateUsersDB(username,password1,email,usersDB)           # altrimenti aggiorno DB
+        flash("User correctly registered. You can now login", 'notify')
+        return render_template("login.html")
+    return render_template('signup.html')
 
 ### LOGIN UTENTE
-@app.route('/login', methods=['POST'])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
-    if current_user.is_authenticated:                   # se utente già autenticato lo porto al menu generale
-        return redirect(url_for('/static/menu.html'))
-    username = request.values['username']               # altrimenti acquisisco i dati da pagina html
-    password = request.values['password']
+    if request.method == 'POST':
+        if current_user.is_authenticated:
+            return redirect(url_for('menu'))
+        
+        username = request.values['username']
+        password = request.values['password']
 
-    usersDB = getUsersDB()                              # acquisisco i dati degli utenti registrati
-                                                        # (lo devo fare ogni volta perchè se ho più istanze potrei avere aggiornamenti da altre istanze del DB)
-    if username in usersDB and password == usersDB[username]["password"]:   # se registrato e password ok
-        login_user(User(username))                                          # lo porto al menu generale
-        return redirect('/static/menu.html')
-    
-    flash('Invalid username or password', 'error')
-    return redirect('/static/login.html')               # altrimenti lo riporto a login con errore
+        usersDB = getUsersDB()
+        if username in usersDB and password == usersDB[username]["password"]:
+            login_user(User(username))
+            return redirect(url_for('menu'))
+        
+        flash('Invalid username or password', 'error')
+        return redirect(url_for('login'))
+
+    return render_template('login.html')
+
 
 ### LOGOUT UTENTE
 @app.route('/logout', methods=["POST"])
 def logout():
     logout_user()
-    return redirect('/static/index.html')
+    return redirect(url_for('main'))
 
 
 if __name__ == '__main__':
