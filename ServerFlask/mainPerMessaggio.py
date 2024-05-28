@@ -483,7 +483,7 @@ def signup():
             return render_template('signup.html')
         
         usersDB = updateUsersDB(username,password1,email,usersDB)           # altrimenti aggiorno DB
-        flash("User correctly registered", 'notify')
+        flash("User correctly registered. You can now login", 'notify')
         return render_template("login.html")
     return render_template('signup.html')
 
