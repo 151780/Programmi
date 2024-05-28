@@ -36,11 +36,15 @@
                                 </form>
                                 {% with messages = get_flashed_messages(with_categories=true) %}
                                     {% if messages %}
-                                        <div id="error" style="color: red; font-size: 20px;position: relative; top: -60px; left: 300px;">
+                                        <div id="error" style="color: red; font-size: 30px;font-weight: bold;position: relative; top: -100px; left: 350px;">
                                             {% for category, message in messages %}
                                                 <p>{{ message }}</p>
                                             {% endfor %}
                                         </div>
+                                        <audio id="errorSound" src="sounds/notify.mp3" preload="auto"></audio>
+                                        <script>
+                                            document.getElementById('errorSound').play();
+                                        </script>
                                     {% endif %}
                                 {% endwith %}
                             </section>
