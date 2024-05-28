@@ -258,7 +258,7 @@ def rainGraph():
     i=1
     for fData in featData:                        # creo il dataset da inviare alla pagina per il grafico
         # fTime = str(fData[0].strftime("%H:%M:%S"))
-        fTime = fData[0]
+        fTime = fData[0][11:]
         ds.append([fTime,fData[1]])
         i+=1
     return json.dumps(ds),200
@@ -272,7 +272,7 @@ def humidityGraph():
     i=1
     for fData in featData:
         # fTime = str(fData[0].strftime("%H:%M:%S"))
-        fTime = fData[0]
+        fTime = fData[0][11:]
         ds.append([fTime,fData[1]])
         i+=1
     return json.dumps(ds),200
@@ -286,7 +286,7 @@ def temperatureGraph():
     i=1
     for fData in featData:
         # fTime = str(fData[0].strftime("%H:%M:%S"))
-        fTime = fData[0]
+        fTime = fData[0][11:]
         ds.append([fTime,fData[1]])
         i+=1
     return json.dumps(ds),200
@@ -300,7 +300,7 @@ def windGraph():
     i=1
     for fData in featData:
         # fTime = str(fData[0].strftime("%H:%M:%S"))
-        fTime = fData[0]
+        fTime = fData[0][11:]
         ds.append([fTime,fData[1]])
         i+=1
     return json.dumps(ds),200
@@ -314,7 +314,7 @@ def pressureGraph():
     i=1
     for fData in featData:
         # fTime = str(fData[0].strftime("%H:%M:%S"))
-        fTime = fData[0]
+        fTime = fData[0][11:]
         ds.append([fTime,fData[1]])
         i+=1
     return json.dumps(ds),200
@@ -328,7 +328,7 @@ def lightingGraph():
     i=1
     for fData in featData:
         # fTime = str(fData[0].strftime("%H:%M:%S"))
-        fTime = fData[0]
+        fTime = fData[0][11:]
         ds.append([fTime,fData[1]])
         i+=1
     print(ds)
@@ -367,7 +367,7 @@ def forecastGraph():
     ds=[]                                         # li passo alla pagina html per mostrare il grafico
     for i in range(len(ascisse)):
         # fTime = str(fData[0].strftime("%H:%M:%S"))
-        fTime = str(ascisse[i])
+        fTime = str(ascisse[i])[11:]
         ds.append([fTime,pioggiaReale[i]+2,pioggiaPrevista[i]])
     print(ds)
     return json.dumps(ds),200
