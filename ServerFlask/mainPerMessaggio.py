@@ -239,7 +239,7 @@ def updateUsersDB(username,password,email,usersDB):
 
 ########################## FUNZIONI SERVER FLASK GENERALI ##########################
 ### HOME PAGE
-@app.route('/',methods=['GET'])
+@app.route('/', methods=['GET', 'POST'])
 def main():
     return render_template('index.html')
 
