@@ -21,7 +21,7 @@
                                 <form method="post" action="{{ url_for('login') }}">
                                     <div class="fields">
                                         <div class="field half">
-                                            <label for="username" style="font-size: 20px">Name</label>
+                                            <label for="username" style="font-size: 20px">Username</label>
                                             <input type="text" name="username" id="username" style="background-color:#F6F8F8" />
                                         </div>
                                         <div class="field half">
@@ -36,7 +36,7 @@
                                 </form>
                                 {% with messages = get_flashed_messages(with_categories=true) %}
                                     {% if messages %}
-                                        <div id="error" style="color: red; font-size: 20px;font-weight: bold;position: relative; top: -90px; left: 350px;">
+                                        <div id="error" style="color: red; font-size: 20px;font-weight: bold;position: relative; top: -80px; left: 350px;">
                                             {% for category, message in messages %}
                                                 <p>{{ message }}</p>
                                             {% endfor %}
