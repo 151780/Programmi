@@ -472,14 +472,14 @@ def signup():
         if username == "" or password1 == "" or email == "":        # dse non ho compilato tutti i campi
             flash('Fill in all fields', 'error')
             return render_template('signup.html')
+        if email in [valDict["email"] for valDict in usersDB.values()]: # se mail già usata segnalo e richiedo
+            flash('e-mail already exists', 'error')
+            return render_template('signup.html')
         if username in usersDB:                                     # se l'utente esiste già
             flash('Username already exists', 'error')
             return render_template('signup.html')
         if password1 != password2:                                  # se le 2 password non sono uguali
             flash("Passwords don't match", 'error')
-            return render_template('signup.html')
-        if email in [valDict["email"] for valDict in usersDB.values()]: # se mail già usata segnalo e richiedo
-            flash('e-mail already exists', 'error')
             return render_template('signup.html')
         
         usersDB = updateUsersDB(username,password1,email,usersDB)           # altrimenti aggiorno DB
