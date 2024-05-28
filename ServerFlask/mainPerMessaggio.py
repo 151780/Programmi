@@ -478,6 +478,9 @@ def signup():
         if email in [valDict["email"] for valDict in usersDB.values()]:
             flash('e-mail already exists', 'error')
             return render_template('signup.html')
+        if username == "" or password1 == "" or email == "":
+            flash('Fill in all fields', 'error')
+            return render_template('signup.html')
         
         usersDB = updateUsersDB(username,password1,email,usersDB)           # altrimenti aggiorno DB
         return redirect(url_for('login'))
