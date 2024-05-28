@@ -27,8 +27,17 @@ helpDict={"rain": "Ricevi l'informazione di quanta pioggia in mm/h stia cadendo 
             "lighting": "Ricevi l'informazione del fattore di illuminazione percentuale al momento della richiesta\n",
             "forecast": "Ricevi la previsione di pioggia a breve termine basata sui parametri attuali\n",
             "all": "Ricevi l'informazione completa della situazione atmosferica|n",
-            "global": "Digita\n/start per avviare il bot\n/help per aiuto\n/help <feature> per aiuto sulla specifica feature\n/graph <feature> per andamento della specifica feature\noppure uno dei seguenti per avere i dati relativi alla feature\n   Rain\n   Wind\n   Humidity\n   Pressure\n   Temperature\n   Light\n   Forecast",
+            "global": "Digita\n/start per avviare il bot\n/help per aiuto\n/help <feature> per aiuto sulla specifica feature\n/graph <feature> <numero osservazioni> per andamento della specifica feature (escluso forecast e all) nelle ultime <numero osservazioni> (30 se non definito)\noppure uno dei seguenti per avere i dati relativi alla feature\n   Rain\n   Wind\n   Humidity\n   Pressure\n   Temperature\n   Light\n   Forecast",
             }
+umDict={"rain": " mm/h",
+            "wind": " m/s",
+            "humidity": "%",
+            "pressure": "hPa",
+            "temperature": "°C",
+            "lighting": "%",
+            "forecast": "",
+            }
+
 
 # Acquisisco le info dell'utente
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
@@ -76,21 +85,29 @@ async def graph_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         msg+="Ecco un po' di aiuto\n\n"+helpDict["global"]
         await update.message.reply_text(msg)                # invio la risposta
     else:  
-        atmoEventRequested=linea[1]                                             # altrimenti
-        resp = post(f'{baseURL}/chatbot',data={"atmoEventRequested":atmoEventRequested,"graph":True})
+        try:                                                # verifico se alla richiesta di aiuto è associato il secondo parametro
+            numSamples = int(linea[2])
+        except IndexError:
+            numSamples = 30
+
+        if numSamples<0 or numSamples>50:
+            numSamples=30
+        atmoEventRequested=linea[1]                         # associo il nome della 
+        resp = post(f'{baseURL}/chatbot',data={"atmoEventRequested":atmoEventRequested,"graph":True,"numSamples":numSamples})
 
         featData = resp.json()["valore"]
-        print(featData)
-        input()
 
-        dataTimes = [fData[0] for fData in featData]
-        dataValues = [fData[1] for fData in featData]
+        dataTimes = [fData[0][11:] for fData in featData[-numSamples:]]
+        dataValues = [fData[1] for fData in featData[-numSamples:]]
 
         plt.figure(figsize=(10, 6))
-        plt.plot(dataTimes, dataValues, marker='o')
+        plt.plot(dataTimes, dataValues, marker='.')
         plt.xlabel('Time')
-        plt.ylabel(atmoEventRequested)
-        plt.title(atmoEventRequested)
+        numTicks = 8
+        gapTicks = numSamples // numTicks
+        plt.xticks(ticks=range(0, len(dataTimes), gapTicks), labels=[dataTimes[i] for i in range(0, len(dataTimes), gapTicks)], rotation=60)
+        plt.ylabel(f"{atmoEventRequested}{umDict[atmoEventRequested]}")
+        # plt.title(atmoEventRequested)
         plt.grid(True)
 
         imgName = f"{atmoEventRequested}.png"
@@ -119,37 +136,37 @@ async def answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 def rain():
-    resp = post(f'{baseURL}/chatbot',data={"atmoEventRequested":"rain","graph":False})    # chiamo il server per acquisire i dati dell'ultima rilevazione
+    resp = post(f'{baseURL}/chatbot',data={"atmoEventRequested":"rain","graph":False,"numSamples":1})    # chiamo il server per acquisire i dati dell'ultima rilevazione
     valFeat = "Stanno cadendo {:4.1f} mm/h di pioggia\n".format(resp.json()["valore"])
     return valFeat
 
 def wind():
-    resp = post(f'{baseURL}/chatbot',data={"atmoEventRequested":"wind"})    # chiamo il server per acquisire i dati dell'ultima rilevazione
+    resp = post(f'{baseURL}/chatbot',data={"atmoEventRequested":"wind","graph":False,"numSamples":1})    # chiamo il server per acquisire i dati dell'ultima rilevazione
     valFeat = "La velocità del vento è {:4.1f} m/s\n".format(resp.json()["valore"])
     return valFeat
 
 def humidity():
-    resp = post(f'{baseURL}/chatbot',data={"atmoEventRequested":"humidity"})    # chiamo il server per acquisire i dati dell'ultima rilevazione
+    resp = post(f'{baseURL}/chatbot',data={"atmoEventRequested":"humidity","graph":False,"numSamples":1})    # chiamo il server per acquisire i dati dell'ultima rilevazione
     valFeat = "L'umidità è del {:d}%\n".format(int(resp.json()["valore"]))
     return valFeat
 
 def pressure():
-    resp = post(f'{baseURL}/chatbot',data={"atmoEventRequested":"pressure"})    # chiamo il server per acquisire i dati dell'ultima rilevazione
+    resp = post(f'{baseURL}/chatbot',data={"atmoEventRequested":"pressure","graph":False,"numSamples":1})    # chiamo il server per acquisire i dati dell'ultima rilevazione
     valFeat = "La pressione atmosferica è di {:6.1f} hPa\n".format(resp.json()["valore"])
     return valFeat
 
 def temperature():
-    resp = post(f'{baseURL}/chatbot',data={"atmoEventRequested":"temperature"})    # chiamo il server per acquisire i dati dell'ultima rilevazione
+    resp = post(f'{baseURL}/chatbot',data={"atmoEventRequested":"temperature","graph":False,"numSamples":1})    # chiamo il server per acquisire i dati dell'ultima rilevazione
     valFeat = "La temperatura esterna è di {:4.1f} °C\n".format(resp.json()["valore"])
     return valFeat
 
 def lighting():
-    resp = post(f'{baseURL}/chatbot',data={"atmoEventRequested":"lighting"})    # chiamo il server per acquisire i dati dell'ultima rilevazione
+    resp = post(f'{baseURL}/chatbot',data={"atmoEventRequested":"lighting","graph":False,"numSamples":1})    # chiamo il server per acquisire i dati dell'ultima rilevazione
     valFeat = "Il fattore di illuminazione è del {:d}%\n".format(int(resp.json()["valore"]))
     return valFeat
 
 def forecast():
-    resp = post(f'{baseURL}/chatbot',data={"atmoEventRequested":"rain10"})    # chiamo il server per acquisire i dati dell'ultima rilevazione
+    resp = post(f'{baseURL}/chatbot',data={"atmoEventRequested":"rain10","graph":False,"numSamples":1})    # chiamo il server per acquisire i dati dell'ultima rilevazione
     respValue = int(resp.json()["valore"])
     if respValue == 0:
         valFeat = "Non prevedo pioggia a breve termine\n"
