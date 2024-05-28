@@ -27,15 +27,14 @@ helpDict={"rain": "Ricevi l'informazione di quanta pioggia in mm/h stia cadendo 
             "lighting": "Ricevi l'informazione del fattore di illuminazione percentuale al momento della richiesta\n",
             "forecast": "Ricevi la previsione di pioggia a breve termine basata sui parametri attuali\n",
             "all": "Ricevi l'informazione completa della situazione atmosferica|n",
-            "global": "Digita\n/start per avviare il bot\n/help per aiuto\n/help <feature> per aiuto sulla specifica feature\n/graph <feature> <numero osservazioni> per andamento della specifica feature (escluso forecast e all) nelle ultime <numero osservazioni> (30 se non definito)\noppure uno dei seguenti per avere i dati relativi alla feature\n   Rain\n   Wind\n   Humidity\n   Pressure\n   Temperature\n   Light\n   Forecast",
+            "global": "Digita\n/start per avviare il bot\n/help per aiuto\n/help <feature> per aiuto sulla specifica feature\n/graph <feature> <numero osservazioni> per andamento della specifica feature (escluso forecast e all) nelle ultime <numero osservazioni> (30 se non definito)\noppure uno dei seguenti per avere i dati relativi alla feature\n   Rain\n   Wind\n   Humidity\n   Pressure\n   Temperature\n   Light\n   Forecast\n   All",
             }
-umDict={"rain": " mm/h",
-            "wind": " m/s",
+umDict={"rain": "mm/h",
+            "wind": "m/s",
             "humidity": "%",
             "pressure": "hPa",
             "temperature": "°C",
             "lighting": "%",
-            "forecast": "",
             }
 
 
@@ -106,9 +105,10 @@ async def graph_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         numTicks = 8
         gapTicks = numSamples // numTicks
         plt.xticks(ticks=range(0, len(dataTimes), gapTicks), labels=[dataTimes[i] for i in range(0, len(dataTimes), gapTicks)], rotation=60)
-        plt.ylabel(f"{atmoEventRequested}{umDict[atmoEventRequested]}")
-        # plt.title(atmoEventRequested)
+        # plt.ylabel(f"{atmoEventRequested}{umDict[atmoEventRequested]}")
+        plt.title(f"{atmoEventRequested[0].upper()}{atmoEventRequested[1:]} [{umDict[atmoEventRequested]}]")
         plt.grid(True)
+        plt.tight_layout()
 
         imgName = f"{atmoEventRequested}.png"
         plt.savefig(imgName, format='png')
