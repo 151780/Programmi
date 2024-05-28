@@ -399,7 +399,7 @@ def modelReload():
 def chatbot():
     atmoEventRequested = request.values["atmoEventRequested"]   # identifico il parametro da mostrare
     graphToSend = request.values["graph"]                       # verifico se è richiesto un grafico
-    numSamples = request.values["numSamples"]
+    numSamples = int(request.values["numSamples"])
     
     if graphToSend:
         dataList = getDataFromDB(atmoEventRequested,numSamples)        # acquisisco i valori dal DB
