@@ -2,6 +2,7 @@ import logging
 import os
 import sys
 import json
+import matplotlib.pyplot as plt
 from requests import post
 
 from telegram import ForceReply, Update
@@ -26,7 +27,7 @@ helpDict={"rain": "Ricevi l'informazione di quanta pioggia in mm/h stia cadendo 
             "lighting": "Ricevi l'informazione del fattore di illuminazione percentuale al momento della richiesta\n",
             "forecast": "Ricevi la previsione di pioggia a breve termine basata sui parametri attuali\n",
             "all": "Ricevi l'informazione completa della situazione atmosferica|n",
-            "global": "Digita\n/start per avviare il bot\n/help per aiuto\n/help <feature> per aiuto sulla specifica feature\noppure uno dei seguenti per avere i dati relativi alla feature\n   Rain\n   Wind\n   Humidity\n   Pressure\n   Temperature\n   Light\n   Forecast",
+            "global": "Digita\n/start per avviare il bot\n/help per aiuto\n/help <feature> per aiuto sulla specifica feature\n/graph <feature> per andamento della specifica feature\noppure uno dei seguenti per avere i dati relativi alla feature\n   Rain\n   Wind\n   Humidity\n   Pressure\n   Temperature\n   Light\n   Forecast",
             }
 
 # Acquisisco le info dell'utente
@@ -59,6 +60,46 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         msg+=helpDict[linea[1]]                         # mostro aiuto di comando
     await update.message.reply_text(msg)                # invio la risposta
 
+# Invio grafico richiesto
+async def graph_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user = update.effective_user                        # acquisisco il nome del richiedente
+    msg=f"Sono qui per aiutarti, {user.first_name}\n"   # inizializzo il messaggio di risposta
+    messageText=update.message.text.lower()             # metto tutto in minuscolo il messaggio
+    linea=tuple(messageText.split())                    # divido il messaggio
+    try:                                                # verifico se alla richiesta di aiuto è associato un parametro
+        globale = linea[1] not in helpDict
+    except IndexError:
+        globale = True
+
+    if globale:                                         # se non c'è parametro o parametro non esistente
+        msg=f"La tua richiesta non è corretta, {user.first_name}\n"
+        msg+="Ecco un po' di aiuto\n\n"+helpDict["global"]
+        await update.message.reply_text(msg)                # invio la risposta
+    else:  
+        atmoEventRequested=linea[1]                                             # altrimenti
+        resp = post(f'{baseURL}/chatbot',data={"atmoEventRequested":atmoEventRequested,"graph":True})
+
+        featData = resp.json()["valore"]
+        print(featData)
+        input()
+
+        dataTimes = [fData[0] for fData in featData]
+        dataValues = [fData[1] for fData in featData]
+
+        plt.figure(figsize=(10, 6))
+        plt.plot(dataTimes, dataValues, marker='o')
+        plt.xlabel('Time')
+        plt.ylabel(atmoEventRequested)
+        plt.title(atmoEventRequested)
+        plt.grid(True)
+
+        imgName = f"{atmoEventRequested}.png"
+        plt.savefig(imgName, format='png')
+        plt.close()
+
+        await update.message.reply_photo(photo=open(imgName, 'rb'))
+        os.remove(imgName)
+
 # Gestione della richiesta di informazioni meteo in base al parametro
 async def answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = update.effective_user                        # acquisisco il nome del richiedente
@@ -78,7 +119,7 @@ async def answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 def rain():
-    resp = post(f'{baseURL}/chatbot',data={"atmoEventRequested":"rain"})    # chiamo il server per acquisire i dati dell'ultima rilevazione
+    resp = post(f'{baseURL}/chatbot',data={"atmoEventRequested":"rain","graph":False})    # chiamo il server per acquisire i dati dell'ultima rilevazione
     valFeat = "Stanno cadendo {:4.1f} mm/h di pioggia\n".format(resp.json()["valore"])
     return valFeat
 
@@ -118,8 +159,8 @@ def forecast():
 
 def all():
     valFeat = ""
-#    valFeat = valFeat + temperature() + pressure() + humidity() + wind() + lighting() + rain() + forecast()
-    valFeat = valFeat + temperature() + pressure() + humidity() + lighting() + rain() + forecast()
+    valFeat = valFeat + temperature() + pressure() + humidity() + wind() + lighting() + rain() + forecast()
+    # valFeat = valFeat + temperature() + pressure() + humidity() + lighting() + rain() + forecast()
     return valFeat
 
 # Gestione dell'invio di foto
@@ -144,6 +185,7 @@ def main() -> None:
     application.add_handler(CommandHandler("start", start))         # comando di start
     application.add_handler(CommandHandler("help", help_command))   # comando di aiuto
     application.add_handler(CommandHandler("aiuto", help_command))
+    application.add_handler(CommandHandler("graph", graph_command))   # comando di invio grafico
 
     # Definisco l'handler per tutto ciò che è testo e non è un comando
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, answer))

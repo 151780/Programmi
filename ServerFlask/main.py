@@ -396,16 +396,21 @@ def modelReload():
 
 ### RICHIESTA DATI DA TELEGRAM - OK
 @app.route('/chatbot', methods=['POST'])
-def getChatbotData():
+def chatbot():
     atmoEventRequested = request.values["atmoEventRequested"]   # identifico il parametro da mostrare
+    graphToSend = request.values["graph"]                       # verifico se è richiesto un grafico
     
-    dataList = getDataFromDB(atmoEventRequested,1)        # acquisisco il valore dal DB
-    resp = {"valore":dataList[0][1]}
+    if graphToSend:
+        dataList = getDataFromDB(atmoEventRequested,showPeriods)        # acquisisco i valori dal DB
+        resp = {"valore":dataList}
+    else:
+        dataList = getDataFromDB(atmoEventRequested,1)        # acquisisco il valore dal DB
+        resp = {"valore":dataList[0][1]}
     return resp
 
 ### ACQUISIZIONE DATI DA RASPBERRY
 @app.route('/raspberry', methods=['POST'])
-def getRaspberryData():
+def raspberry():
     global rfModel
     stationID = request.values["stationID"]
     sTime = request.values["sampleTime"]
