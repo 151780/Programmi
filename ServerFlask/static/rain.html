@@ -144,8 +144,16 @@
 							  title: 'Rain [mm]'
 							},
 							legend:'none',
-							title: stationID
-						  };
+							title: stationID,
+							titleTextStyle: {
+								fontSize: 20,
+								bold: true,
+								italic: false,
+								color: '#333',
+								fontName: 'Arial',
+								textAlign: 'center'
+								}
+							};
 						  
 						  var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
 
