@@ -351,9 +351,16 @@ def modelReload():
 @app.route('/chatbot', methods=['POST'])
 def getChatbotData():
     atmoEventRequested = request.values["atmoEventRequested"]   # identifico il parametro da mostrare
+    graphToSend = request.values["graph"]                       # verifico se è richiesto un grafico
+    numSamples = int(request.values["numSamples"])
     
-    dataList = getDataFromDB(atmoEventRequested,1)        # acquisisco il valore dal DB
-    resp = {"valore":dataList[0][1]}
+    if graphToSend:
+        dataList = getDataFromDB(atmoEventRequested,numSamples)        # acquisisco i valori dal DB
+        resp = {"valore":dataList}
+    else:
+        dataList = getDataFromDB(atmoEventRequested,numSamples)        # acquisisco il valore dal DB
+        resp = {"valore":dataList[0][1]}
+
     return resp
 
 ### ACQUISIZIONE DATI DA RASPBERRY
