@@ -296,7 +296,7 @@ def forecastGraph():
     ds=[]                                         # li passo alla pagina html per mostrare il grafico
     for i in range(len(ascisse)):
         fTime = str(ascisse[i])[11:-7]
-        ds.append([fTime,pioggiaReale[i]+2,pioggiaPrevista[i]])
+        ds.append([fTime,pioggiaReale[i],pioggiaPrevista[i]])
     return json.dumps(ds),200
 
 ### ACQUISIZIONE COMANDO TENDE
