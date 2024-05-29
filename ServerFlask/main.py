@@ -207,7 +207,8 @@ def rainGraph():
     stationID = session.get("stationID", '')   # Recupera il valore dalla sessione
     featData = getDataFromDB("rain",showPeriods,stationID)  # acquisisco i dati da DB
     ds=setGraphData(featData)                     # li passo alla pagina html per mostrare il grafico
-    return json.dumps(ds),stationID,200
+    ds.insert(0,stationID)
+    return json.dumps(ds),200
 
 ### GRAFICO HUMIDITY
 @app.route('/humidity', methods=['GET'])

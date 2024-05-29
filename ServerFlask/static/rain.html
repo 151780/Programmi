@@ -115,7 +115,7 @@
 			<script src="assets/js/demo.js"></script>
 			<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 			<script type="text/javascript">
-				$.get("/rain",function(datav, stationID, status){
+				$.get("/rain",function(datav, status){
 					datav = JSON.parse(datav)
 
 
@@ -128,8 +128,11 @@
 						  data.addColumn('string', 'Time');
 						  data.addColumn('number', 'Rain');
 						  datav2 = []
-						  for(i=0; i<datav.length;i++)
-						  	datav2.push([datav[i][0],datav[i][1]])
+						  if (i === 0) {
+								stationID = datav[i]; // Imposta il titolo solo quando i è uguale a 0
+							} else {
+								datav2.push([datav[i][0], datav[i][1]]);
+							}					
 						  data.addRows(datav2);
 
 						  var options = {
