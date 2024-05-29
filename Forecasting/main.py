@@ -34,7 +34,7 @@ def trainRetrain(event, context, type=""):
 
     meteoDatadf["rainBool"]=(meteoDatadf["rain"]>0)         # aggiungo la colonna booleana che indica se piove o meno
 
-    columnToRemove=["humidity","pressure","temperature","sampleTime","lighting","rain",f"rain10","stationID"]     # definisco le colonne che non servono per il forecast
+    columnToRemove=["wind","humidity","pressure","temperature","sampleTime","lighting","rain",f"rain10","stationID"]     # definisco le colonne che non servono per il forecast
     meteoDatadf = meteoDatadf.drop(columns=columnToRemove)          # e le rimuovo
     meteoDatadf = meteoDatadf.iloc[backwardSamples+1:]                    # rimuovo le prime righe che non hanno colonne valide per forecast
 

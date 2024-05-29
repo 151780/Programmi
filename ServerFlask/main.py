@@ -175,7 +175,7 @@ def setModelToRetrain():
     dumpPath=f"/tmp/{fileName}.txt"            # definisco il path di salvataggio locale
     blobName = f"{fileName}.txt"                # definisco il nome del file di salvataggio sul cloud
 
-    with open(dumpPath,mode='a',newline='') as txtFile:         # creo il file locale
+    with open(dumpPath,mode='w',newline='') as txtFile:         # creo il file locale
         txtFile.write("retrain\n")
 
     csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
@@ -314,8 +314,8 @@ def forecastGraph():
     pioggiaPrevista.pop(-1)
 
     accScore=accuracy_score(pioggiaReale, pioggiaPrevista, normalize=True)
+    print("Accuracy: ", accScore)
     if accScore < accuracyThreshold: # se accuracy si riduce sottosoglia
-        print("Accuracy: ", accScore)
         setModelToRetrain()
     # else:
     #     setModelToRetrain()
@@ -342,7 +342,6 @@ def awningControl(ctrlToRun):
 
 ### RIACQUISIZIONE MODELLO
 @app.route('/model', methods=['POST'])
-@login_required
 def modelReload():
     global rfModel
     rfModel=getModel()

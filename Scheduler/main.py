@@ -15,7 +15,6 @@ collUsers = 'Users'
 collMeteo = 'MeteoData'
 meteoStationDB = firestore.Client.from_service_account_json('credentials.json', database=dbName)
 
-
 #### INVIO RICHIESTA DI RETRAIN CON PUBSUB
 def modelRetrain():
     modelToRetrain = False
@@ -30,12 +29,12 @@ def modelRetrain():
     gcBucket = csClient.bucket(bucketName)      # scelgo il bucket
     gcBlob = gcBucket.blob(blobName)            # assegno il nome del file di destinazione
     gcBlob.download_to_filename(dumpPath)       # scarico il file dal cloud    
-    gcBlob.upload_from_string("")               # e lo svuoto
+    gcBlob.upload_from_string("done")               # e lo svuoto
 
     controlsToRun=""
     with open(dumpPath,mode='r',newline='') as txtFile:         # creo il file locale
         for txtLine in txtFile:
-            if txtLine == "retrain":
+            if txtLine[:7] == "retrain":
                 modelToRetrain = True
                 break
 
@@ -87,13 +86,13 @@ def saveDataToCloudStorage():
     gcBlob.upload_from_filename(dumpPath)       # carico il file sul cloud
 
 
-schedule.every(60).seconds.do(modelRetrain)         # verifica periodica se necessita retrain del modello
+schedule.every(5).minutes.do(modelRetrain)         # verifica periodica se necessita retrain del modello
 schedule.every(10).minutes.do(saveDataToCloudStorage)         # aggiornamento periodico cloud storage per looker
 
 
 try:
     while True: # ripeti fino a keypressed
         schedule.run_pending()
-        time.sleep(10)
+        time.sleep(60)
 except KeyboardInterrupt:
     pass
