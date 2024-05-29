@@ -176,8 +176,7 @@ def setModelToRetrain():
     blobName = f"{fileName}.txt"                # definisco il nome del file di salvataggio sul cloud
 
     with open(dumpPath,mode='a',newline='') as txtFile:         # creo il file locale
-        writer = csv.writer(txtFile)
-        writer.writerow("retrain")
+        txtFile.write("retrain\n")
 
     csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
 
@@ -294,7 +293,7 @@ def lightingGraph():
 @login_required
 def forecastGraph():
     global rfModel
-    rfModel = getModel()
+    # rfModel = getModel()
 
     print("Grafico forecast pioggia")
     collRef = meteoStationDB.collection(collMeteo)      # definisco la collection da leggere e ne leggo gli ultimi elementi necessari per grafico
