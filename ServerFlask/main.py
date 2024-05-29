@@ -65,11 +65,12 @@ def getDataFromDB(atmoEv,sPer,stID):
     print("StationID = ", stID)
     collRef = meteoStationDB.collection(collMeteo)      # definisco la collection da leggere e ne leggo gli ultimi elementi necessari per grafico
     qForecast = collRef.where("stationID", "==", stID).order_by("sampleTime", direction=firestore.Query.DESCENDING)
-    qForecast=qForecast.limit(sPer)
+    qForecast=qForecast.limit(5)
     # .limit(sPer)
     # collRef = meteoStationDB.collection(collMeteo).where("stationID", "==", stID)     # definisco la collection da leggere e ne leggo gli ultimi elementi necessari per grafico
     # qForecast = collRef.order_by("sampleTime", direction=firestore.Query.DESCENDING).limit(sPer)
     meteoList = list(qForecast.stream())                # creo la lista dei documenti da graficare sul forecast
+    print(meteoList)
     meteoList.reverse()                                 # inverto la lista perchè ero in descending
     featData=[]                                         # inizializzo le liste dei dati
 
