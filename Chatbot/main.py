@@ -96,6 +96,8 @@ async def graph_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
         featData = resp.json()["valore"]
 
+        print(featData)
+
         dataTimes = [fData[0][11:] for fData in featData[-numSamples:]]
         dataValues = [fData[1] for fData in featData[-numSamples:]]
 
