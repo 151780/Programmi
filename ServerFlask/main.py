@@ -153,7 +153,6 @@ def setGraphData(featData):
 ### SALVATAGGIO RICHIESTE CONTROLLI TENDE
 def saveControls(ctrlToRun):
     ctrlToRun+="\n"
-    print(ctrlToRun)
     fileName = "awningControls"
     bucketName = "151780-progetto01"            # definisco il nome del bucket di salvataggio in cloud
     dumpPath=f"/tmp/{fileName}.txt"            # definisco il path di salvataggio locale
