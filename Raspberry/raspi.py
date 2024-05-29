@@ -10,6 +10,7 @@ import adafruit_dht
 from requests import post, get
 from datetime import datetime
 from secret import bot_token, chat_id
+import random
 
 # baseURL = 'http://34.154.241.138:80'
 # baseURL = "http://192.168.1.50:80"
@@ -106,7 +107,7 @@ def ritraiTendaStop():
 
 ############ ACQUISIZIONE E GESTIONE DEI DATI DEI SENSORI
 def getStatus(wStConst):
-    global windTic, itsRaining, itsWinding, sTime, oldsTime
+    global windTic, itsRaining, itsWinding, itsLighting, sTime, oldsTime
     
     sTime=datetime.now()
     elapsedTime=(sTime-oldsTime).total_seconds()
@@ -129,7 +130,7 @@ def getStatus(wStConst):
     print("sTime: ",sTime)
     print("sTimeStr: ",sTimeStr)
     
-    dataVal={"stationID":"stazione",
+    dataVal={"stationID":"Rasp1-",
             "sTimeStr":sTimeStr,
             "sampleTime":sTime,
             "temperature":temperatureBMP,
@@ -158,10 +159,10 @@ def getStatus(wStConst):
 
     # segnalo al bot Telegram che sta piovendo
     if rainfall>0:
-        if not itsRaining:
+        if not itsRaining and not fcTendaRitratta.is_active:
             chatID = wStConst["chatID"]
             botToken = wStConst["botToken"]
-            message = "STA PIOVENDO!"
+            message = "STA PIOVENDO E NON HAI LE TENDE RITRATTE!"
             url = f"https://api.telegram.org/bot{botToken}/sendMessage?chat_id={chatID}&text={message}"
             get(url).json()
             itsRaining=True
@@ -170,16 +171,29 @@ def getStatus(wStConst):
         
     # segnalo al bot Telegram che ci sono folate di vento forte
     if wind>10:
-        if not itsWinding:
+        if not itsWinding and not fcTendaRitratta.is_active:
             chatID = wStConst["chatID"]
             botToken = wStConst["botToken"]
-            message = "FOLATE DI VENTO FORTE!"
+            message = "FOLATE DI VENTO FORTE E NON HAI LE TENDE RITRATTE!"
             url = f"https://api.telegram.org/bot{botToken}/sendMessage?chat_id={chatID}&text={message}"
             get(url).json()
             itsWinding=True
     
     if wind<0.2:
         itsWinding=False
+        
+    # segnalo al bot Telegram che c'è molto sole e caldo e ho le tende su
+    if lighting>80 and temperatureBMP>25:
+        if not itsLighting and not fcTendaEstesa.is_active:
+            chatID = wStConst["chatID"]
+            botToken = wStConst["botToken"]
+            message = "FORTE ILLUMINAZIONE E CALORE E HAI LE TENDE RITRATTE!"
+            url = f"https://api.telegram.org/bot{botToken}/sendMessage?chat_id={chatID}&text={message}"
+            get(url).json()
+            itsLighting=True
+    
+    if lighting<40:
+        itsLighting=False
         
     windTic=0
 
@@ -227,6 +241,7 @@ weatherStationConst["photoMax"] = 25400
 
 itsRaining=False
 itsWinding=False
+itsLighting=False
 
 # riservo il DHT11
 dht11 = adafruit_dht.DHT11(board.D18)
@@ -242,7 +257,7 @@ bmp.sea_level_pressure = 1013
 # acquisisco la prima volta
 getStatus(weatherStationConst)
 # schedulazione acquisizione ogni 10 secondi
-schedule.every(10).seconds.do(getStatus,weatherStationConst)
+schedule.every(random.randint(2,4)).seconds.do(getStatus,weatherStationConst)
 
 try:
     while True: # ripeti fino a keypressed

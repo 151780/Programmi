@@ -193,6 +193,13 @@ def main():
 def menu():
     return redirect("/static/menu.html")
 
+@app.route('/saveStation', methods=['POST'])
+def saveStation():
+    stationID = request.form['stationID']
+    # Salva il valore selezionato (puoi adattare questo codice per salvare il valore nel modo desiderato)
+    print(f'Selected value: {stationID}')
+    return '', 200
+
 ### GRAFICO PIOGGIA
 @app.route('/rain', methods=['GET'])
 @login_required

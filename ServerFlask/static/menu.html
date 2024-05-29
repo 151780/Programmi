@@ -1,11 +1,4 @@
 <!DOCTYPE HTML>
-<!--
-	Story by HTML5 UP
-	html5up.net | @ajlkn
-	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
-
-	### VERSIONE 4 - 23/5/24
--->
 <html>
 	<head>
 		<title>Menu</title>
@@ -41,6 +34,13 @@
 					<section class="wrapper style1 align-center">
 						<div class="inner">
 							<h1 style = "font-family: Arial; font-size: 80px; margin: -50px auto 0 auto;">Diagrams overview</h1>
+
+							<!-- Casella a discesa -->
+							<label for="stationID">Select station:</label>
+							<select name="stationID" id="stationID">
+								<option value="Raspberry">Raspberry</option>
+								<option value="PC1">PC1</option>
+							</select>
 
 							<div class="items style1 medium onscroll-fade-in">
 
@@ -122,6 +122,25 @@
 
 		<!-- Note: Only needed for demo purposes. Delete for production sites. -->
 			<script src="assets/js/demo.js"></script>
+
+			<script>
+				function sendValueAndRedirect(event, url) {
+					event.preventDefault();
+					var select = document.getElementById('stationID');
+					var value = select.value;
+	
+					var xhr = new XMLHttpRequest();
+					xhr.open("POST", "/saveStation", true);
+					xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+					xhr.onreadystatechange = function() {
+						if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+							window.location.href = url;
+						}
+					};
+					xhr.send("stationID=" + encodeURIComponent(value));
+				}
+			</script>
+
 
 	</body>
 </html>
