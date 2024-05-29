@@ -115,7 +115,7 @@
 			<script src="assets/js/demo.js"></script>
 			<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 			<script type="text/javascript">
-				$.get("/rain",function(datav, status){
+				$.get("/rain",function(datav, stationID, status){
 					datav = JSON.parse(datav)
 
 
@@ -139,7 +139,8 @@
 							vAxis: {
 							  title: 'Rain [mm]'
 							},
-							legend:'none'
+							legend:'none',
+							title: stationID
 						  };
 						  
 						  var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
