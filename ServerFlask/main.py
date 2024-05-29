@@ -265,11 +265,9 @@ def lightingGraph():
 @login_required
 def forecastGraph():
     global rfModel
-    stationID = session.get("stationID", '')   # Recupera il valore dalla sessione
-
     print("Grafico forecast pioggia")
     collRef = meteoStationDB.collection(collMeteo)      # definisco la collection da leggere e ne leggo gli ultimi elementi necessari per grafico
-    qForecast = collRef.where("station", "==", stationID).order_by("sampleTime", direction=firestore.Query.DESCENDING).limit(showPeriods+backwardSamples)
+    qForecast = collRef.order_by("sampleTime", direction=firestore.Query.DESCENDING).limit(showPeriods+backwardSamples)
     meteoList = list(qForecast.stream())                # creo la lista dei documenti da graficare sul forecast
     meteoList.reverse()                                 # inverto la lista perchè ero in descending
     ascisse=[]                                          # inizializzo le liste dei dati
@@ -294,7 +292,6 @@ def forecastGraph():
     for i in range(len(ascisse)):
         fTime = str(ascisse[i])[11:-7]
         ds.append([fTime,pioggiaReale[i],pioggiaPrevista[i]])
-    ds.insert(0,f"Stazione {stationID[:-1].upper()}")
     return json.dumps(ds),200
 
 ### ACQUISIZIONE COMANDO TENDE
