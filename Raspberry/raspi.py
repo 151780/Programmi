@@ -27,18 +27,15 @@ def getDHT11(dht11,wStConst):
             temperature = dht11.temperature
             humidity = dht11.humidity
             print("DHT11:\t\tTemperatura {:3.1f} °C - Umidità {:4.1f}%".format(temperature,humidity))
-            # print("DHT11:\t\tTemperatura %3.1f °C - Umidità %d "%(temperature,humidity))
             gotParams=True
         except RuntimeError as error:
             # in caso di errore riprovo
-            # print(error.args[0])
             time.sleep(2)
             continue
         except Exception as error:
             # in caso di eccezione rilascio la risorsa e termino
             dht11.exit()
             raise error
-        # time.sleep(2.0)
         nTry+=1
     return temperature, humidity
 
@@ -54,7 +51,6 @@ def getADS1015_BMP180(i2c,ads,bmp,wStConst):
     pressure=bmp.pressure
     altitude=bmp.altitude
     print("BMP180:\t\tTemperatura {:3.1f} °C - Pressione {:6.1f} mbar - Altitudine {:4.0f} m".format(temperature,pressure,altitude))
-    # print("BMP180:\t\tTemperatura %3.1f °C - Pressione %5.1f mbar - Altitudine %4d m"%(temperature,pressure,altitude))
     
     # acquisisco i dati del ADS1015
     # canale 0 - fotoresistenza
@@ -80,7 +76,6 @@ def getADS1015_BMP180(i2c,ads,bmp,wStConst):
         rainSensorValue = rainMax
     rainfall=(rainMax-rainSensorValue)/(rainMax-rainMin)
     print("Canale 1:\tSensore pioggia {:5.0f} - Tensione {:5.3f} V - Precipitazioni {:4.2f} mm/h".format(rainSensorValue,rainSensorVolt,rainfall))
-    # time.sleep(2)
     return temperature,pressure,altitude,photoResValue,photoResVolt,lighting,rainSensorValue,rainSensorVolt,rainfall
 
 ############ RISPOSTA A EVENTO DI WINDTIC
@@ -111,7 +106,7 @@ def ritraiTendaStop():
 
 ############ ACQUISIZIONE E GESTIONE DEI DATI DEI SENSORI
 def getStatus(wStConst):
-    global windTic, itsRaining, sTime, oldsTime
+    global windTic, itsRaining, itsWinding, sTime, oldsTime
     
     sTime=datetime.now()
     elapsedTime=(sTime-oldsTime).total_seconds()
@@ -173,6 +168,19 @@ def getStatus(wStConst):
     else:
         itsRaining=False
         
+    # segnalo al bot Telegram che ci sono folate di vento forte
+    if wind>10:
+        if not itsWinding:
+            chatID = wStConst["chatID"]
+            botToken = wStConst["botToken"]
+            message = "FOLATE DI VENTO FORTE!"
+            url = f"https://api.telegram.org/bot{botToken}/sendMessage?chat_id={chatID}&text={message}"
+            get(url).json()
+            itsWinding=True
+    
+    if wind<0.2:
+        itsWinding=False
+        
     windTic=0
 
 ############# MAIN
@@ -218,6 +226,7 @@ weatherStationConst["photoMin"] = 4000
 weatherStationConst["photoMax"] = 25400
 
 itsRaining=False
+itsWinding=False
 
 # riservo il DHT11
 dht11 = adafruit_dht.DHT11(board.D18)

@@ -100,10 +100,9 @@ async def awning_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 # Invio grafico richiesto
 async def graph_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = update.effective_user                        # acquisisco il nome del richiedente
-    # msg=f"Sono qui per aiutarti, {user.first_name}\n"   # inizializzo il messaggio di risposta
     messageText=update.message.text.lower()             # metto tutto in minuscolo il messaggio
     linea=tuple(messageText.split())                    # divido il messaggio
-    try:                                                # verifico se alla richiesta di aiuto è associato un parametro
+    try:                                                # verifico se alla richiesta di grafico è associato un parametro
         globale = linea[1] not in helpDict
     except IndexError:
         globale = True
@@ -111,39 +110,41 @@ async def graph_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     if globale:                                         # se non c'è parametro o parametro non esistente
         msg=f"La tua richiesta non è corretta, {user.first_name}\n"
         msg+="Ecco un po' di aiuto\n\n"+helpDict["global"]
-        await update.message.reply_text(msg)                # invio la risposta
+        await update.message.reply_text(msg)            # invio la risposta con aiuto
     else:  
-        try:                                                # verifico se alla richiesta di aiuto è associato il secondo parametro
+        try:                                            # verifico se alla richiesta di grafico è associato il parametro di dimensione campione
             numSamples = int(linea[2])
         except IndexError:
             numSamples = 30
 
-        if numSamples<0 or numSamples>50:
+        if numSamples<10 or numSamples>50:               # limito il numero di campioni tra 10 e 50
             numSamples=30
-        atmoEventRequested=linea[1]                         # associo il nome della 
+        atmoEventRequested=linea[1]                      # associo il nome della feature alla richiesta in post
         resp = post(f'{baseURL}/chatbot',data={"atmoEventRequested":atmoEventRequested,"graph":True,"numSamples":numSamples})
 
-        featData = resp.json()["valore"]
+        featData = resp.json()["valore"]                # acquisisco i dati
 
-        dataTimes = [fData[0][11:] for fData in featData[-numSamples:]]
-        dataValues = [fData[1] for fData in featData[-numSamples:]]
+        dataTimes = [fData[0][11:] for fData in featData[-numSamples:]]     # e li preparo per graficarli
+        if atmoEventRequested=="pressure":
+            dataValues = [int(fData[1]) for fData in featData[-numSamples:]]
+        else:
+            dataValues = [fData[1] for fData in featData[-numSamples:]]
 
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(10, 6))                     # creo il grafico con tutti i parametri associati
         plt.plot(dataTimes, dataValues, marker='.')
         plt.xlabel('Time')
         numTicks = 8
         gapTicks = numSamples // numTicks
         plt.xticks(ticks=range(0, len(dataTimes), gapTicks), labels=[dataTimes[i] for i in range(0, len(dataTimes), gapTicks)], rotation=60)
-        # plt.ylabel(f"{atmoEventRequested}{umDict[atmoEventRequested]}")
         plt.title(f"{atmoEventRequested[0].upper()}{atmoEventRequested[1:]} [{umDict[atmoEventRequested]}]")
         plt.grid(True)
         plt.tight_layout()
 
-        imgName = f"{atmoEventRequested}.png"
+        imgName = f"{atmoEventRequested}.png"           # salvo l'immagine del grafico in locale
         plt.savefig(imgName, format='png')
         plt.close()
 
-        await update.message.reply_photo(photo=open(imgName, 'rb'))
+        await update.message.reply_photo(photo=open(imgName, 'rb'))     # restituisco l'immagine all'utente
         os.remove(imgName)
 
 # Gestione della richiesta di informazioni meteo in base al parametro
@@ -158,12 +159,12 @@ async def answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         msg+="Ecco un po' di aiuto\n\n"+helpDict["global"]
     else:                                               # altrimenti notifico il valore
         msg=f"{user.first_name}, eccoti i dati richiesti\n"
-        callFnc = globals().get(funzioneRichiesta)
+        callFnc = globals().get(funzioneRichiesta)      # richiamando la funzione richiesta
         valFeat=callFnc()
         msg+=f"{valFeat}"
     await update.message.reply_text(msg)
 
-
+# Chiamate alle funzioni specifiche di feature
 def rain():
     resp = post(f'{baseURL}/chatbot',data={"atmoEventRequested":"rain","graph":False,"numSamples":1})    # chiamo il server per acquisire i dati dell'ultima rilevazione
     valFeat = "Stanno cadendo {:4.1f} mm/h di pioggia\n".format(resp.json()["valore"][0][1])

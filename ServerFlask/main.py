@@ -40,32 +40,12 @@ accuracyThreshold = 0.8 # indica la soglia sotto la quale devo fare retrain
 modelToRetrain = False  # variabile globale per segnalazione di retrain necessario
 
 ########################## FUNZIONI DI SERVIZIO ##########################
-#### INVIO RICHIESTA DI RETRAIN CON PUBSUB
-""" def modelRetrain():
-    global modelToRetrain
-    print(" ***** RETRAINING *****")
-
-    if modelToRetrain:
-        myProj = "progetto01-417313"
-        myTopic = "trainRetrainReq"
-
-        servAccount = json.load(open("credentials.json"))
-        audience = "https://pubsub.googleapis.com/google.pubsub.v1.Publisher"
-        credentials = jwt.Credentials.from_service_account_info(servAccount, audience=audience)
-        publisher = pubsub_v1.PublisherClient(credentials=credentials)
-        topic_path = publisher.topic_path(myProj, myTopic)
-        r = publisher.publish(topic_path, b'Retrain model', type=b"retrain")
-        print(r.result())
-        modelToRetrain = False
-
-        return """
-
 #### ACQUISIZIONE MODELLO DA CLOUD ####
 def getModel():
     # recupero il modello dal cloud
     clfName = "rfClass"
     bucketName = "151780-progetto01"        # definisco il nome del bucket di salvataggio in cloud
-    dumpPath=f"/tmp/{clfName}.joblib"      # definisco il path di salvataggio locale del modello
+    dumpPath=f"/tmp/{clfName}.joblib"       # definisco il path di salvataggio locale del modello
     blobName = f"{clfName}.joblib"          # definisco il nome del file di salvataggio sul cloud
 
     csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
@@ -78,7 +58,7 @@ def getModel():
     print("Modello riacquisito")
     return rf
 
-rfModel = getModel()                                # variabile contenente il modello di forecasting
+rfModel = getModel()                         # variabile contenente il modello di forecasting
 
 ### ACQUSIZIONE DATI DAL DB PER GRAFICI
 def getDataFromDB(atmoEv,sPer):
@@ -94,7 +74,7 @@ def getDataFromDB(atmoEv,sPer):
    
     return featData
 
-### SALVATAGGIO DATI SENSORI SU FIRESTORE
+### SALVATAGGIO DATI FEATURES SU FIRESTORE
 def saveDataToDB(stID,sTime,sTimeStr,sTemp,sHum,sPress,sLight,sRain,fRain,sWind):
     print("salvataggio dati")
     docID = stID + sTimeStr
@@ -118,8 +98,8 @@ def saveDataToDB(stID,sTime,sTimeStr,sTemp,sHum,sPress,sLight,sRain,fRain,sWind)
 
 ### PREPARAZIONE DATI GRAFICI
 def setGraphData(featData):
-    ds=[]                                         # li passo alla pagina html per mostrare il grafico
-    for fData in featData:                        # creo il dataset da inviare alla pagina per il grafico
+    ds=[]                                           # li passo alla pagina html per mostrare il grafico
+    for fData in featData:                          # creo il dataset da inviare alla pagina per il grafico
         ds.append([fData[0][11:],fData[1]])
     return ds
 
@@ -127,9 +107,9 @@ def setGraphData(featData):
 def saveControls(ctrlToRun):
     ctrlToRun+="\n"
     fileName = "awningControls"
-    bucketName = "151780-progetto01"            # definisco il nome del bucket di salvataggio in cloud
+    bucketName = "151780-progetto01"           # definisco il nome del bucket di salvataggio in cloud
     dumpPath=f"/tmp/{fileName}.txt"            # definisco il path di salvataggio locale
-    blobName = f"{fileName}.txt"                # definisco il nome del file di salvataggio sul cloud
+    blobName = f"{fileName}.txt"               # definisco il nome del file di salvataggio sul cloud
 
     with open(dumpPath,mode='a',newline='') as txtFile:         # creo il file locale
         txtFile.write(ctrlToRun)
@@ -144,11 +124,11 @@ def saveControls(ctrlToRun):
 ### SALVATAGGIO RICHIESTA RETRAIN
 def setModelToRetrain():
     fileName = "retrainRequest"
-    bucketName = "151780-progetto01"            # definisco il nome del bucket di salvataggio in cloud
-    dumpPath=f"/tmp/{fileName}.txt"            # definisco il path di salvataggio locale
-    blobName = f"{fileName}.txt"                # definisco il nome del file di salvataggio sul cloud
+    bucketName = "151780-progetto01"                # definisco il nome del bucket di salvataggio in cloud
+    dumpPath=f"/tmp/{fileName}.txt"                 # definisco il path di salvataggio locale
+    blobName = f"{fileName}.txt"                    # definisco il nome del file di salvataggio sul cloud
 
-    with open(dumpPath,mode='w',newline='') as txtFile:         # creo il file locale
+    with open(dumpPath,mode='w',newline='') as txtFile:     # creo il file locale
         txtFile.write("retrain\n")
 
     csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
@@ -175,7 +155,7 @@ def getControls():
     controlsToRun=""
     with open(dumpPath,mode='r',newline='') as txtFile:         # creo il file locale
         for ctrl in txtFile:
-            controlsToRun = controlsToRun + " " + ctrl
+            controlsToRun = controlsToRun + " " + ctrl          # genero una stringa con spazi tra i comandi
 
     return controlsToRun
 
@@ -290,8 +270,6 @@ def forecastGraph():
     print("Accuracy: ", accScore)
     if accScore < accuracyThreshold: # se accuracy si riduce sottosoglia
         setModelToRetrain()
-    # else:
-    #     setModelToRetrain()
 
     ds=[]                                         # li passo alla pagina html per mostrare il grafico
     for i in range(len(ascisse)):
@@ -321,23 +299,23 @@ def getChatbotData():
     numSamples = int(request.values["numSamples"])
     
     if graphToSend:
-        dataList = getDataFromDB(atmoEventRequested,numSamples)        # acquisisco i valori dal DB
+        dataList = getDataFromDB(atmoEventRequested,numSamples)        # acquisisco i valori dal DB per il grafico
         resp = {"valore":dataList}
     else:
-        dataList = getDataFromDB(atmoEventRequested,numSamples)        # acquisisco il valore dal DB
+        dataList = getDataFromDB(atmoEventRequested,numSamples)        # acquisisco il valore dal DB per interrogazione feature
         resp = {"valore":dataList[0][1]}
     return resp
 
 # ### GESTIONE COMANDO TENDE DA TELEGRAM
 @app.route('/controls', methods=['POST'])
 def controls():
-    awningCommand = request.values["awningCommand"]
+    awningCommand = request.values["awningCommand"]     # acquisco i parametri di chiamata
     awningItem = int(request.values["awningItem"])
-    if awningCommand == "up":
+    if awningCommand == "up":                           # in base a comando e numero tenda costruisco il comando da inviare al Raspberry
         ctrlToRun = f"t{awningItem}-r"
     if awningCommand == "down":
         ctrlToRun = f"t{awningItem}-e"
-    saveControls(ctrlToRun)
+    saveControls(ctrlToRun)                             # lo appendo sul file di comunicazione
     resp = "Controllo ricevuto"
     return resp
 
@@ -345,7 +323,7 @@ def controls():
 @app.route('/raspberry', methods=['POST'])
 def getRaspberryData():
     global rfModel
-    stationID = request.values["stationID"]
+    stationID = request.values["stationID"]             # acquisisco i parametri ricevuti
     sTime = request.values["sampleTime"]
     sTimeStr = request.values["sTimeStr"]
     temperatureValue = float(request.values["temperature"])
@@ -371,19 +349,19 @@ def getRaspberryData():
     else:
         rainForecast=0
 
-    print(stationID,sTime)
-    print(sTimeStr)
-    print("T = ",temperatureValue)
-    print("H = ",humidityValue)
-    print("P = ",pressureValue)
-    print("L = ",lightingValue)
-    print("R = ",rainfallValue)
-    print("W = ",windValue)
-    print("F = ", rainForecast)
+    # print(stationID,sTime)
+    # print(sTimeStr)
+    # print("T = ",temperatureValue)
+    # print("H = ",humidityValue)
+    # print("P = ",pressureValue)
+    # print("L = ",lightingValue)
+    # print("R = ",rainfallValue)
+    # print("W = ",windValue)
+    # print("F = ", rainForecast)
 
     saveDataToDB(stationID,sTime,sTimeStr,temperatureValue,humidityValue,pressureValue,lightingValue,rainfallValue,rainForecast,windValue) # salvo i dati sul DB
     controlsToRun = getControls()   # acquisisco i controlli da effettuare sulle tende da inoltrare al Raspberry
-    resp = {"comandi":controlsToRun}
+    resp = {"comandi":controlsToRun}# e li invio al Raspberry in risposta
     return resp
 
 ########################## FUNZIONI SERVER FLASK LOGIN
@@ -444,7 +422,6 @@ def login():
         return redirect(url_for('login'))
 
     return render_template('login.html')
-
 
 ### LOGOUT UTENTE
 @app.route('/logout', methods=["POST"])
