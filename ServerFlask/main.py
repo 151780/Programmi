@@ -337,7 +337,7 @@ def getRaspberryData():
     collRef = meteoStationDB.collection(collMeteo)          # definisco la collection da leggere e ne leggo gli ultimi elementi necessari per grafico
     qForecast = collRef.order_by("sampleTime", direction=firestore.Query.DESCENDING).limit(backwardSamples)
     meteoList = list(qForecast.stream())                    # creo la lista dei documenti che servono per fare il forecast
-    featureColList=["humidity","pressure","temperature"]
+    featureColList=["humidity","pressure","temperature","wind"]
     if len(meteoList)>=backwardSamples:                     # se ho sufficienti dati per fare il forecast
         forecastData = [[]]                                 # costruisco l'esempio
         for sampleDoc in meteoList:                         # per ogni esempio acquisito
