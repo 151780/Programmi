@@ -128,11 +128,12 @@
 						  data.addColumn('string', 'Time');
 						  data.addColumn('number', 'Rain');
 						  datav2 = []
-						  if (i === 0) {
-								stationID = datav[i]; // Imposta il titolo solo quando i è uguale a 0
-							} else {
-								datav2.push([datav[i][0], datav[i][1]]);
-							}					
+						  for(i=0; i<datav.length;i++)
+							if (i === 0) {
+									stationID = datav[i]; // Imposta il titolo solo quando i è uguale a 0
+								} else {
+									datav2.push([datav[i][0], datav[i][1]]);
+								}					
 						  data.addRows(datav2);
 
 						  var options = {
