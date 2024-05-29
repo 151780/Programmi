@@ -314,7 +314,11 @@ def getChatbotData():
     atmoEventRequested = request.values["atmoEventRequested"]   # identifico il parametro da mostrare
     graphToSend = request.values["graph"]                       # verifico se è richiesto un grafico
     numSamples = int(request.values["numSamples"])
-    stationID = request.values["stationID"]
+    userName = request.values["userName"]
+    if userName=="Roberto":
+        stationID = "Rasp1-"
+    else:
+        stationID = "PC1-"
     
     if graphToSend:
         dataList = getDataFromDB(atmoEventRequested,numSamples,stationID)        # acquisisco i valori dal DB per il grafico
