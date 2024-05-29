@@ -159,7 +159,7 @@ def saveControls(ctrlToRun):
     dumpPath=f"/tmp/{fileName}.txt"            # definisco il path di salvataggio locale
     blobName = f"{fileName}.txt"                # definisco il nome del file di salvataggio sul cloud
 
-    with open(dumpPath,mode='a',newline='') as txtFile:         # creo il file locale
+    with open(dumpPath,mode='w',newline='') as txtFile:         # creo il file locale
         txtFile.write(ctrlToRun)
 
     csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
