@@ -61,9 +61,9 @@ def getModel():
 rfModel = getModel()                         # variabile contenente il modello di forecasting
 
 ### ACQUSIZIONE DATI DAL DB PER GRAFICI
-def getDataFromDB(atmoEv,sPer):
+def getDataFromDB(atmoEv,sPer,stID):
     collRef = meteoStationDB.collection(collMeteo)      # definisco la collection da leggere e ne leggo gli ultimi elementi necessari per grafico
-    qForecast = collRef.order_by("sampleTime", direction=firestore.Query.DESCENDING).limit(sPer)
+    qForecast = collRef.where("station", "==", stID).order_by("sampleTime", direction=firestore.Query.DESCENDING).limit(sPer)
     meteoList = list(qForecast.stream())                # creo la lista dei documenti da graficare sul forecast
     meteoList.reverse()                                 # inverto la lista perchè ero in descending
     featData=[]                                         # inizializzo le liste dei dati
@@ -206,7 +206,7 @@ def saveStation():
 @login_required
 def rainGraph():
     stationID = session.get("stationID", 'ras')   # Recupera il valore dalla sessione
-    featData = getDataFromDB("rain",showPeriods)  # acquisisco i dati da DB
+    featData = getDataFromDB("rain",showPeriods,stationID)  # acquisisco i dati da DB
     ds=setGraphData(featData)                     # li passo alla pagina html per mostrare il grafico
     return json.dumps(ds),200
 
@@ -215,7 +215,7 @@ def rainGraph():
 @login_required
 def humidityGraph():
     stationID = session.get("stationID", 'ras')   # Recupera il valore dalla sessione
-    featData = getDataFromDB("humidity",showPeriods)  # acquisisco i dati da DB
+    featData = getDataFromDB("humidity",showPeriods,stationID)  # acquisisco i dati da DB
     ds=setGraphData(featData)                     # li passo alla pagina html per mostrare il grafico
     return json.dumps(ds),200
 
@@ -224,7 +224,7 @@ def humidityGraph():
 @login_required
 def temperatureGraph():
     stationID = session.get("stationID", 'ras')   # Recupera il valore dalla sessione
-    featData = getDataFromDB("temperature",showPeriods)  # acquisisco i dati da DB
+    featData = getDataFromDB("temperature",showPeriods,stationID)  # acquisisco i dati da DB
     ds=setGraphData(featData)                     # li passo alla pagina html per mostrare il grafico
     return json.dumps(ds),200
 
@@ -233,7 +233,7 @@ def temperatureGraph():
 @login_required
 def windGraph():
     stationID = session.get("stationID", 'ras')   # Recupera il valore dalla sessione
-    featData = getDataFromDB("wind",showPeriods)  # acquisisco i dati da DB
+    featData = getDataFromDB("wind",showPeriods,stationID)  # acquisisco i dati da DB
     ds=setGraphData(featData)                     # li passo alla pagina html per mostrare il grafico
     return json.dumps(ds),200
 
@@ -242,7 +242,7 @@ def windGraph():
 @login_required
 def pressureGraph():
     stationID = session.get("stationID", 'ras')   # Recupera il valore dalla sessione
-    featData = getDataFromDB("pressure",showPeriods)  # acquisisco i dati da DB
+    featData = getDataFromDB("pressure",showPeriods,stationID)  # acquisisco i dati da DB
     ds=setGraphData(featData)                     # li passo alla pagina html per mostrare il grafico
     return json.dumps(ds),200
 
@@ -251,7 +251,7 @@ def pressureGraph():
 @login_required
 def lightingGraph():
     stationID = session.get("stationID", 'ras')   # Recupera il valore dalla sessione
-    featData = getDataFromDB("lighting",showPeriods)  # acquisisco i dati da DB
+    featData = getDataFromDB("lighting",showPeriods,stationID)  # acquisisco i dati da DB
     ds=setGraphData(featData)                     # li passo alla pagina html per mostrare il grafico
     return json.dumps(ds),200
 
@@ -264,7 +264,7 @@ def forecastGraph():
 
     print("Grafico forecast pioggia")
     collRef = meteoStationDB.collection(collMeteo)      # definisco la collection da leggere e ne leggo gli ultimi elementi necessari per grafico
-    qForecast = collRef.order_by("sampleTime", direction=firestore.Query.DESCENDING).limit(showPeriods+backwardSamples)
+    qForecast = collRef.where("station", "==", stationID).order_by("sampleTime", direction=firestore.Query.DESCENDING).limit(showPeriods+backwardSamples)
     meteoList = list(qForecast.stream())                # creo la lista dei documenti da graficare sul forecast
     meteoList.reverse()                                 # inverto la lista perchè ero in descending
     ascisse=[]                                          # inizializzo le liste dei dati
@@ -311,12 +311,13 @@ def getChatbotData():
     atmoEventRequested = request.values["atmoEventRequested"]   # identifico il parametro da mostrare
     graphToSend = request.values["graph"]                       # verifico se è richiesto un grafico
     numSamples = int(request.values["numSamples"])
+    stationID = request.values["stationID"]
     
     if graphToSend:
-        dataList = getDataFromDB(atmoEventRequested,numSamples)        # acquisisco i valori dal DB per il grafico
+        dataList = getDataFromDB(atmoEventRequested,numSamples,stationID)        # acquisisco i valori dal DB per il grafico
         resp = {"valore":dataList}
     else:
-        dataList = getDataFromDB(atmoEventRequested,numSamples)        # acquisisco il valore dal DB per interrogazione feature
+        dataList = getDataFromDB(atmoEventRequested,numSamples,stationID)        # acquisisco il valore dal DB per interrogazione feature
         resp = {"valore":dataList[0][1]}
     return resp
 
