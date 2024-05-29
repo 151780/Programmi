@@ -14,7 +14,7 @@ parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, parent_dir)
 from vmURL import baseURL
 
-baseURL = 'http://34.154.241.138:80'
+# baseURL = 'http://34.154.241.138:80'
 # baseURL = 'http://192.168.1.50:80'
 
 
@@ -103,7 +103,7 @@ async def graph_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     messageText=update.message.text.lower()             # metto tutto in minuscolo il messaggio
     linea=tuple(messageText.split())                    # divido il messaggio
     try:                                                # verifico se alla richiesta di grafico è associato un parametro
-        globale = linea[1] not in helpDict
+        globale = linea[1] not in helpDict or linea[1] in ["forecast","all"]
     except IndexError:
         globale = True
 
