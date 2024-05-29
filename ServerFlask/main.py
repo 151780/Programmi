@@ -10,20 +10,6 @@ import json
 import schedule
 import csv
 
-
-# i nomi delle finestre sono:
-# index
-# login
-# menu
-# controls
-# rain
-# wind
-# humidity
-# pressure
-# temperature
-# light
-# forecast
-
 ########################## INIZIALIZZAZIONI ##########################
 # definizione classe User
 class User(UserMixin):
@@ -108,7 +94,7 @@ def getDataFromDB(atmoEv,sPer):
    
     return featData
 
-### SALVATAGGIO DATI SENSORI SU FIRESTORE E SU FILE CSV IN STORAGE PER LOOKER
+### SALVATAGGIO DATI SENSORI SU FIRESTORE
 def saveDataToDB(stID,sTime,sTimeStr,sTemp,sHum,sPress,sLight,sRain,fRain,sWind):
     print("salvataggio dati")
     docID = stID + sTimeStr
@@ -129,6 +115,13 @@ def saveDataToDB(stID,sTime,sTimeStr,sTemp,sHum,sPress,sLight,sRain,fRain,sWind)
     docRef.set(docVal)                                              # e lo scrivo
 
     return 'Data saved',200
+
+### PREPARAZIONE DATI GRAFICI
+def setGraphData(featData):
+    ds=[]                                         # li passo alla pagina html per mostrare il grafico
+    for fData in featData:                        # creo il dataset da inviare alla pagina per il grafico
+        ds.append([fData[0][11:],fData[1]])
+    return ds
 
 ### SALVATAGGIO DATI SENSORI SU FILE CSV IN STORAGE PER LOOKER
 """ def saveDataToCloudStorage():
@@ -159,6 +152,7 @@ def saveDataToDB(stID,sTime,sTimeStr,sTemp,sHum,sPress,sLight,sRain,fRain,sWind)
 
 ### SALVATAGGIO RICHIESTE CONTROLLI TENDE
 def saveControls(ctrlToRun):
+    print(ctrlToRun)
     fileName = "awningControls"
     bucketName = "151780-progetto01"            # definisco il nome del bucket di salvataggio in cloud
     dumpPath=f"/tmp/{fileName}.txt"            # definisco il path di salvataggio locale
@@ -253,13 +247,7 @@ def menu():
 @login_required
 def rainGraph():
     featData = getDataFromDB("rain",showPeriods)  # acquisisco i dati da DB
-    ds=[]                                         # li passo alla pagina html per mostrare il grafico
-    i=1
-    for fData in featData:                        # creo il dataset da inviare alla pagina per il grafico
-        # fTime = str(fData[0].strftime("%H:%M:%S"))
-        fTime = fData[0][11:]
-        ds.append([fTime,fData[1]])
-        i+=1
+    ds=setGraphData(featData)                     # li passo alla pagina html per mostrare il grafico
     return json.dumps(ds),200
 
 ### GRAFICO HUMIDITY
@@ -267,13 +255,7 @@ def rainGraph():
 @login_required
 def humidityGraph():
     featData = getDataFromDB("humidity",showPeriods)  # acquisisco i dati da DB
-    ds=[]                                         # li passo alla pagina html per mostrare il grafico
-    i=1
-    for fData in featData:
-        # fTime = str(fData[0].strftime("%H:%M:%S"))
-        fTime = fData[0][11:]
-        ds.append([fTime,fData[1]])
-        i+=1
+    ds=setGraphData(featData)                     # li passo alla pagina html per mostrare il grafico
     return json.dumps(ds),200
 
 ### GRAFICO TEMPERATURE
@@ -281,13 +263,7 @@ def humidityGraph():
 @login_required
 def temperatureGraph():
     featData = getDataFromDB("temperature",showPeriods)  # acquisisco i dati da DB
-    ds=[]                                         # li passo alla pagina html per mostrare il grafico
-    i=1
-    for fData in featData:
-        # fTime = str(fData[0].strftime("%H:%M:%S"))
-        fTime = fData[0][11:]
-        ds.append([fTime,fData[1]])
-        i+=1
+    ds=setGraphData(featData)                     # li passo alla pagina html per mostrare il grafico
     return json.dumps(ds),200
 
 ### GRAFICO WIND
@@ -295,13 +271,7 @@ def temperatureGraph():
 @login_required
 def windGraph():
     featData = getDataFromDB("wind",showPeriods)  # acquisisco i dati da DB
-    ds=[]                                         # li passo alla pagina html per mostrare il grafico
-    i=1
-    for fData in featData:
-        # fTime = str(fData[0].strftime("%H:%M:%S"))
-        fTime = fData[0][11:]
-        ds.append([fTime,fData[1]])
-        i+=1
+    ds=setGraphData(featData)                     # li passo alla pagina html per mostrare il grafico
     return json.dumps(ds),200
 
 ### GRAFICO PRESSURE
@@ -309,13 +279,7 @@ def windGraph():
 @login_required
 def pressureGraph():
     featData = getDataFromDB("pressure",showPeriods)  # acquisisco i dati da DB
-    ds=[]                                         # li passo alla pagina html per mostrare il grafico
-    i=1
-    for fData in featData:
-        # fTime = str(fData[0].strftime("%H:%M:%S"))
-        fTime = fData[0][11:]
-        ds.append([fTime,fData[1]])
-        i+=1
+    ds=setGraphData(featData)                     # li passo alla pagina html per mostrare il grafico
     return json.dumps(ds),200
 
 ### GRAFICO LIGHTING
@@ -323,13 +287,7 @@ def pressureGraph():
 @login_required
 def lightingGraph():
     featData = getDataFromDB("lighting",showPeriods)  # acquisisco i dati da DB
-    ds=[]                                         # li passo alla pagina html per mostrare il grafico
-    i=1
-    for fData in featData:
-        # fTime = str(fData[0].strftime("%H:%M:%S"))
-        fTime = fData[0][11:]
-        ds.append([fTime,fData[1]])
-        i+=1
+    ds=setGraphData(featData)                     # li passo alla pagina html per mostrare il grafico
     return json.dumps(ds),200
 
 ### GRAFICO FORECASTING PIOGGIA
@@ -364,18 +322,16 @@ def forecastGraph():
 
     ds=[]                                         # li passo alla pagina html per mostrare il grafico
     for i in range(len(ascisse)):
-        # fTime = str(fData[0].strftime("%H:%M:%S"))
         fTime = str(ascisse[i])[11:]
         ds.append([fTime,pioggiaReale[i]+2,pioggiaPrevista[i]])
-    print(ds)
     return json.dumps(ds),200
 
-### GESTIONE COMANDO TENDE
-@app.route('/controls', methods=['GET'])
-@login_required
-def controls():
-    print("Controlli")
-    return redirect('/static/controls.html')
+# ### GESTIONE COMANDO TENDE
+# @app.route('/controls', methods=['GET'])
+# @login_required
+# def controls():
+#     print("Controlli")
+#     return redirect('/static/controls.html')
 
 ### ACQUISIZIONE COMANDO TENDE
 @app.route('/awning/<ctrlToRun>', methods=['GET'])
