@@ -206,7 +206,6 @@ def saveStation():
 @login_required
 def rainGraph():
     stationID = session.get("stationID", 'ras')   # Recupera il valore dalla sessione
-    print("stationID = ",stationID)
     featData = getDataFromDB("rain",showPeriods)  # acquisisco i dati da DB
     ds=setGraphData(featData)                     # li passo alla pagina html per mostrare il grafico
     return json.dumps(ds),200
@@ -215,6 +214,7 @@ def rainGraph():
 @app.route('/humidity', methods=['GET'])
 @login_required
 def humidityGraph():
+    stationID = session.get("stationID", 'ras')   # Recupera il valore dalla sessione
     featData = getDataFromDB("humidity",showPeriods)  # acquisisco i dati da DB
     ds=setGraphData(featData)                     # li passo alla pagina html per mostrare il grafico
     return json.dumps(ds),200
@@ -223,6 +223,7 @@ def humidityGraph():
 @app.route('/temperature', methods=['GET'])
 @login_required
 def temperatureGraph():
+    stationID = session.get("stationID", 'ras')   # Recupera il valore dalla sessione
     featData = getDataFromDB("temperature",showPeriods)  # acquisisco i dati da DB
     ds=setGraphData(featData)                     # li passo alla pagina html per mostrare il grafico
     return json.dumps(ds),200
@@ -231,6 +232,7 @@ def temperatureGraph():
 @app.route('/wind', methods=['GET'])
 @login_required
 def windGraph():
+    stationID = session.get("stationID", 'ras')   # Recupera il valore dalla sessione
     featData = getDataFromDB("wind",showPeriods)  # acquisisco i dati da DB
     ds=setGraphData(featData)                     # li passo alla pagina html per mostrare il grafico
     return json.dumps(ds),200
@@ -239,6 +241,7 @@ def windGraph():
 @app.route('/pressure', methods=['GET'])
 @login_required
 def pressureGraph():
+    stationID = session.get("stationID", 'ras')   # Recupera il valore dalla sessione
     featData = getDataFromDB("pressure",showPeriods)  # acquisisco i dati da DB
     ds=setGraphData(featData)                     # li passo alla pagina html per mostrare il grafico
     return json.dumps(ds),200
@@ -247,6 +250,7 @@ def pressureGraph():
 @app.route('/lighting', methods=['GET'])
 @login_required
 def lightingGraph():
+    stationID = session.get("stationID", 'ras')   # Recupera il valore dalla sessione
     featData = getDataFromDB("lighting",showPeriods)  # acquisisco i dati da DB
     ds=setGraphData(featData)                     # li passo alla pagina html per mostrare il grafico
     return json.dumps(ds),200
@@ -256,7 +260,7 @@ def lightingGraph():
 @login_required
 def forecastGraph():
     global rfModel
-    # rfModel = getModel()
+    stationID = session.get("stationID", 'ras')   # Recupera il valore dalla sessione
 
     print("Grafico forecast pioggia")
     collRef = meteoStationDB.collection(collMeteo)      # definisco la collection da leggere e ne leggo gli ultimi elementi necessari per grafico
