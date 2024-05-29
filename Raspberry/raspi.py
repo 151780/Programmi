@@ -90,18 +90,20 @@ def addWindTic():
 
 ############ FUNZIONI DI GESTIONE TENDA
 def estendiTenda():
-    releRitraiTenda.off()
-    time.sleep(1)
-    releEstendiTenda.on()
+    if not fcTendaEstesa.is_active:
+        releRitraiTenda.off()
+        time.sleep(1)
+        releEstendiTenda.on()
 
 def estendiTendaStop():
     print("estendiTendaStop")
     releEstendiTenda.off()
 
 def ritraiTenda():
-    releEstendiTenda.on()
-    time.sleep(1)
-    releRitraiTenda.off()
+    if not fcTendaRitratta.is_active:
+        releEstendiTenda.off()
+        time.sleep(1)
+        releRitraiTenda.on()
 
 def ritraiTendaStop():
     print("ritraiTendaStop")
@@ -114,7 +116,7 @@ def getStatus(wStConst):
     sTime=datetime.now()
     elapsedTime=(sTime-oldsTime).total_seconds()
     oldsTime=sTime
-    wind = (windTic * spinAnem)/elapsedTime
+    wind = 10*(windTic * spinAnem)/elapsedTime
     print("----------------------------------------")
     print("Tenda ritratta:\t",fcTendaRitratta.is_active)
     print("Tenda estesa:\t",fcTendaEstesa.is_active)
@@ -143,12 +145,22 @@ def getStatus(wStConst):
              "wind":wind}
 
     r = post(f'{baseURL}/raspberry',data=dataVal)
-    
-    print(r)
-    print(r.json())
-    # print(r.text)
+    # print(r)
+    jsonComandi=r.json()["comandi"]
+    # print(jsonComandi)
+    listComandi = jsonComandi.split(" ")
+    print(listComandi)
+    for listElem in listComandi:
+        comElem = 0
+        try:
+            comElem = listElem[3]
+        except IndexError:
+            pass
+        if comElem=="r":
+            ritraiTenda()
+        if comElem=="e":
+            estendiTenda()
 
-    
     # segnalo al bot Telegram che sta piovendo
     if rainfall>0:
         if not itsRaining:
@@ -221,15 +233,12 @@ bmp.sea_level_pressure = 1013
 # acquisisco la prima volta
 getStatus(weatherStationConst)
 # schedulazione acquisizione ogni 10 secondi
-schedule.every(20).seconds.do(getStatus,weatherStationConst)
+schedule.every(10).seconds.do(getStatus,weatherStationConst)
 
-releRitraiTenda.toggle()
 try:
     while True: # ripeti fino a keypressed
         schedule.run_pending()
         time.sleep(1)
-        releRitraiTenda.toggle()
-        releEstendiTenda.toggle()
 except KeyboardInterrupt:
     pass
 
