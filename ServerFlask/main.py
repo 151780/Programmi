@@ -313,7 +313,9 @@ def forecastGraph():
     pioggiaReale.pop(0)
     pioggiaPrevista.pop(-1)
 
-    if accuracy_score(pioggiaReale, pioggiaPrevista, normalize=True) < accuracyThreshold: # se accuracy si riduce sottosoglia
+    accScore=accuracy_score(pioggiaReale, pioggiaPrevista, normalize=True)
+    if accScore < accuracyThreshold: # se accuracy si riduce sottosoglia
+        print("Accuracy: ", accScore)
         setModelToRetrain()
     # else:
     #     setModelToRetrain()
