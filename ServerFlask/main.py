@@ -1,4 +1,4 @@
-from flask import Flask,request,redirect,url_for,render_template,jsonify,flash
+from flask import Flask,request,redirect,url_for,render_template,session,flash
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required, UserMixin
 from secret import secret_key
 from google.cloud import firestore, storage
@@ -193,10 +193,11 @@ def main():
 def menu():
     return redirect("/static/menu.html")
 
+### ACQUISIZIONE STAZIONE DA VISUALIZZARE
 @app.route('/saveStation', methods=['POST'])
 def saveStation():
     stationID = request.form['stationID']
-    # Salva il valore selezionato (puoi adattare questo codice per salvare il valore nel modo desiderato)
+    session['stationID'] = stationID
     print(f'Selected value: {stationID}')
     return '', 200
 
@@ -204,6 +205,8 @@ def saveStation():
 @app.route('/rain', methods=['GET'])
 @login_required
 def rainGraph():
+    stationID = session.get("stationID", 'ras')   # Recupera il valore dalla sessione
+    print("stationID = ",stationID)
     featData = getDataFromDB("rain",showPeriods)  # acquisisco i dati da DB
     ds=setGraphData(featData)                     # li passo alla pagina html per mostrare il grafico
     return json.dumps(ds),200
