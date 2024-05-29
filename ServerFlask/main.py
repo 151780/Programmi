@@ -197,7 +197,7 @@ def menu():
 @app.route('/saveStation', methods=['POST'])
 def saveStation():
     stationID = request.form['stationID']
-    session['stationID'] = stationID
+    session['stationID'] = f"{stationID}-"
     print(f'Selected value: {stationID}')
     return '', 200
 
