@@ -152,6 +152,7 @@ def setGraphData(featData):
 
 ### SALVATAGGIO RICHIESTE CONTROLLI TENDE
 def saveControls(ctrlToRun):
+    ctrlToRun+="\n"
     print(ctrlToRun)
     fileName = "awningControls"
     bucketName = "151780-progetto01"            # definisco il nome del bucket di salvataggio in cloud
@@ -159,8 +160,7 @@ def saveControls(ctrlToRun):
     blobName = f"{fileName}.txt"                # definisco il nome del file di salvataggio sul cloud
 
     with open(dumpPath,mode='a',newline='') as txtFile:         # creo il file locale
-        writer = csv.writer(txtFile)
-        writer.writerow(ctrlToRun)
+        txtFile.write(ctrlToRun)
 
     csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
 
