@@ -123,7 +123,11 @@
 						  data.addColumn('number', 'Wind');
 						  datav2 = []
 						  for(i=0; i<datav.length;i++)
-						  	datav2.push([datav[i][0],datav[i][1]])
+							if (i === 0) {
+									stationID = datav[i]; // Imposta il titolo solo quando i è uguale a 0
+								} else {
+									datav2.push([datav[i][0], datav[i][1]]);
+								}					
 						  data.addRows(datav2);
 
 						  var options = {
@@ -131,10 +135,19 @@
 							  title: 'Time'
 							},
 							vAxis: {
-							  title: 'Wind [m/s]'
+							  title: 'Rain [mm]'
 							},
-							legend:'none'
-						  };
+							legend:'none',
+							title: stationID,
+							titleTextStyle: {
+								fontSize: 20,
+								bold: true,
+								italic: false,
+								color: '#333',
+								fontName: 'Arial',
+								textAlign: 'center'
+								}
+							};
 						  
 						  var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
 

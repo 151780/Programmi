@@ -217,6 +217,7 @@ def humidityGraph():
     stationID = session.get("stationID", '')   # Recupera il valore dalla sessione
     featData = getDataFromDB("humidity",showPeriods,stationID)  # acquisisco i dati da DB
     ds=setGraphData(featData)                     # li passo alla pagina html per mostrare il grafico
+    ds.insert(0,f"Stazione {stationID[:-1].upper()}")
     return json.dumps(ds),200
 
 ### GRAFICO TEMPERATURE
@@ -226,6 +227,7 @@ def temperatureGraph():
     stationID = session.get("stationID", '')   # Recupera il valore dalla sessione
     featData = getDataFromDB("temperature",showPeriods,stationID)  # acquisisco i dati da DB
     ds=setGraphData(featData)                     # li passo alla pagina html per mostrare il grafico
+    ds.insert(0,f"Stazione {stationID[:-1].upper()}")
     return json.dumps(ds),200
 
 ### GRAFICO WIND
@@ -235,6 +237,7 @@ def windGraph():
     stationID = session.get("stationID", '')   # Recupera il valore dalla sessione
     featData = getDataFromDB("wind",showPeriods,stationID)  # acquisisco i dati da DB
     ds=setGraphData(featData)                     # li passo alla pagina html per mostrare il grafico
+    ds.insert(0,f"Stazione {stationID[:-1].upper()}")
     return json.dumps(ds),200
 
 ### GRAFICO PRESSURE
@@ -244,6 +247,7 @@ def pressureGraph():
     stationID = session.get("stationID", '')   # Recupera il valore dalla sessione
     featData = getDataFromDB("pressure",showPeriods,stationID)  # acquisisco i dati da DB
     ds=setGraphData(featData)                     # li passo alla pagina html per mostrare il grafico
+    ds.insert(0,f"Stazione {stationID[:-1].upper()}")
     return json.dumps(ds),200
 
 ### GRAFICO LIGHTING
@@ -253,6 +257,7 @@ def lightingGraph():
     stationID = session.get("stationID", '')   # Recupera il valore dalla sessione
     featData = getDataFromDB("lighting",showPeriods,stationID)  # acquisisco i dati da DB
     ds=setGraphData(featData)                     # li passo alla pagina html per mostrare il grafico
+    ds.insert(0,f"Stazione {stationID[:-1].upper()}")
     return json.dumps(ds),200
 
 ### GRAFICO FORECASTING PIOGGIA
@@ -289,6 +294,7 @@ def forecastGraph():
     for i in range(len(ascisse)):
         fTime = str(ascisse[i])[11:-7]
         ds.append([fTime,pioggiaReale[i],pioggiaPrevista[i]])
+    ds.insert(0,f"Stazione {stationID[:-1].upper()}")
     return json.dumps(ds),200
 
 ### ACQUISIZIONE COMANDO TENDE
