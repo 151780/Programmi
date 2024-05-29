@@ -326,17 +326,17 @@ def getChatbotData():
     else:
         dataList = getDataFromDB(atmoEventRequested,numSamples)        # acquisisco il valore dal DB
         resp = {"valore":dataList[0][1]}
-
     return resp
 
 # ### GESTIONE COMANDO TENDE DA TELEGRAM
 @app.route('/controls', methods=['POST'])
 def controls():
     awningCommand = request.values["awningCommand"]
+    awningItem = int(request.values["awningItem"])
     if awningCommand == "up":
-        ctrlToRun = "t1-r"
+        ctrlToRun = f"t{awningItem}-r"
     if awningCommand == "down":
-        ctrlToRun = "t1-e"
+        ctrlToRun = f"t{awningItem}-e"
     saveControls(ctrlToRun)
     resp = "Controllo ricevuto"
     return resp

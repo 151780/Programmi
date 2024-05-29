@@ -27,7 +27,7 @@ helpDict={"rain": "Ricevi l'informazione di quanta pioggia in mm/h stia cadendo 
             "lighting": "Ricevi l'informazione del fattore di illuminazione percentuale al momento della richiesta\n",
             "forecast": "Ricevi la previsione di pioggia a breve termine basata sui parametri attuali\n",
             "all": "Ricevi l'informazione completa della situazione atmosferica|n",
-            "global": "Digita\n/start per avviare il bot\n/help per aiuto\n/help <feature> per aiuto sulla specifica feature\n/graph <feature> <numero osservazioni> per andamento della specifica feature (escluso forecast e all) nelle ultime <numero osservazioni> (30 se non definito)\n/awning <command> per controllare la posizione delle tende; <command> = up - down\n\noppure uno dei seguenti per avere i dati relativi alla feature\n   Rain\n   Wind\n   Humidity\n   Pressure\n   Temperature\n   Light\n   Forecast\n   All",
+            "global": "Digita\n/start per avviare il bot\n/help per aiuto\n/help <feature> per aiuto sulla specifica feature\n/graph <feature> <numero osservazioni> per andamento della specifica feature (escluso forecast e all) nelle ultime <numero osservazioni> (30 se non definito)\n/awning <command> <numero_tenda>per controllare la posizione della tenda <numero_tenda>; <command> = up - down;\n\noppure uno dei seguenti per avere i dati relativi alla feature\n   Rain\n   Wind\n   Humidity\n   Pressure\n   Temperature\n   Light\n   Forecast\n   All",
             }
 umDict={"rain": "mm/h",
             "wind": "m/s",
@@ -83,7 +83,12 @@ async def awning_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         msg+="Ecco un po' di aiuto\n\n"+helpDict["global"]
     else:  
         awningCommand=linea[1]                              # acquisisco il comando da effettuare 
-        resp = post(f'{baseURL}/controls',data={"awningCommand":awningCommand}) # richiedo al server di registrare la richiesta
+        try:                                                # verifico se alla richiesta è associato il parametro tenda
+            awningItem = int(linea[2])
+        except IndexError:
+            awningItem = 1
+
+        resp = post(f'{baseURL}/controls',data={"awningCommand":awningCommand,"awningItem":awningItem}) # richiedo al server di registrare la richiesta
         statusCode = resp.status_code
 
         if statusCode == 200:
