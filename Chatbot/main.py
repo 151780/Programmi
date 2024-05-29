@@ -27,7 +27,7 @@ helpDict={"rain": "Ricevi l'informazione di quanta pioggia in mm/h stia cadendo 
             "lighting": "Ricevi l'informazione del fattore di illuminazione percentuale al momento della richiesta\n",
             "forecast": "Ricevi la previsione di pioggia a breve termine basata sui parametri attuali\n",
             "all": "Ricevi l'informazione completa della situazione atmosferica|n",
-            "global": "Digita\n/start per avviare il bot\n/help per aiuto\n/help <feature> per aiuto sulla specifica feature\n/graph <feature> <numero osservazioni> per andamento della specifica feature (escluso forecast e all) nelle ultime <numero osservazioni> (30 se non definito)\noppure uno dei seguenti per avere i dati relativi alla feature\n   Rain\n   Wind\n   Humidity\n   Pressure\n   Temperature\n   Light\n   Forecast\n   All",
+            "global": "Digita\n/start per avviare il bot\n/help per aiuto\n/help <feature> per aiuto sulla specifica feature\n/graph <feature> <numero osservazioni> per andamento della specifica feature (escluso forecast e all) nelle ultime <numero osservazioni> (30 se non definito)\n/awning <command> per controllare la posizione delle tende; <command> = up - down\n\noppure uno dei seguenti per avere i dati relativi alla feature\n   Rain\n   Wind\n   Humidity\n   Pressure\n   Temperature\n   Light\n   Forecast\n   All",
             }
 umDict={"rain": "mm/h",
             "wind": "m/s",
@@ -68,10 +68,34 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         msg+=helpDict[linea[1]]                         # mostro aiuto di comando
     await update.message.reply_text(msg)                # invio la risposta
 
+# Gestione comando tende
+async def awning_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user = update.effective_user                            # acquisisco il nome del richiedente
+    messageText=update.message.text.lower()                 # metto tutto in minuscolo il messaggio
+    linea=tuple(messageText.split())                        # divido il messaggio
+    try:                                                    # verifico se alla richiesta di aiuto è associato un parametro corretto
+        globale = linea[1] not in ["up","down"]
+    except IndexError:
+        globale = True
+
+    if globale:                                             # se non c'è parametro o parametro non esistente
+        msg=f"La tua richiesta non è corretta, {user.first_name}\n"
+        msg+="Ecco un po' di aiuto\n\n"+helpDict["global"]
+    else:  
+        awningCommand=linea[1]                              # acquisisco il comando da effettuare 
+        resp = post(f'{baseURL}/controls',data={"awningCommand":awningCommand}) # richiedo al server di registrare la richiesta
+        statusCode = resp.status_code
+
+        if statusCode == 200:
+            msg=f"La tua richiesta è andata a buon fine, {user.first_name}\n"
+        else:
+            msg=f"La tua richiesta non è andata a buon fine, {user.first_name}\nRiprova più tardi"
+    await update.message.reply_text(msg)                # invio la risposta
+
 # Invio grafico richiesto
 async def graph_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = update.effective_user                        # acquisisco il nome del richiedente
-    msg=f"Sono qui per aiutarti, {user.first_name}\n"   # inizializzo il messaggio di risposta
+    # msg=f"Sono qui per aiutarti, {user.first_name}\n"   # inizializzo il messaggio di risposta
     messageText=update.message.text.lower()             # metto tutto in minuscolo il messaggio
     linea=tuple(messageText.split())                    # divido il messaggio
     try:                                                # verifico se alla richiesta di aiuto è associato un parametro
@@ -203,6 +227,7 @@ def main() -> None:
     application.add_handler(CommandHandler("help", help_command))   # comando di aiuto
     application.add_handler(CommandHandler("aiuto", help_command))
     application.add_handler(CommandHandler("graph", graph_command))   # comando di invio grafico
+    application.add_handler(CommandHandler("awning", awning_command))   # comando di operazioni tende
 
     # Definisco l'handler per tutto ciò che è testo e non è un comando
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, answer))

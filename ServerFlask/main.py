@@ -123,33 +123,6 @@ def setGraphData(featData):
         ds.append([fData[0][11:],fData[1]])
     return ds
 
-### SALVATAGGIO DATI SENSORI SU FILE CSV IN STORAGE PER LOOKER
-""" def saveDataToCloudStorage():
-    print(" ***** SAVING TO STORAGE *****")
-    fileName = "MeteoData"
-    bucketName = "151780-progetto01"            # definisco il nome del bucket di salvataggio in cloud
-    dumpPath=f"/tmp/{fileName}.csv"            # definisco il path di salvataggio locale
-    blobName = f"{fileName}.csv"                # definisco il nome del file di salvataggio sul cloud
-
-    meteoList = meteoStationDB.collection(collMeteo).stream()   # acquisisco i dati dal DB Firestore
-    firstLine = True
-    with open(dumpPath,mode='w',newline='') as csvFile:         # creo il file locale
-        writer = csv.writer(csvFile)
-        for meteoSample in meteoList:
-            meteoSampleDict=meteoSample.to_dict()
-            if firstLine:
-                meteoNames = list(meteoSampleDict.keys())       # creo intestazione solo al primo record
-                writer.writerow(meteoNames)
-                firstLine = False
-            meteoValues = list(meteoSampleDict.values())
-            writer.writerow(meteoValues)
-
-    csClient = storage.Client.from_service_account_json('./credentials.json')  # accedo al cloud storage
-
-    gcBucket = csClient.bucket(bucketName)      # scelgo il bucket
-    gcBlob = gcBucket.blob(blobName)            # assegno il nome del file di destinazione
-    gcBlob.upload_from_filename(dumpPath)       # carico il file sul cloud """
-
 ### SALVATAGGIO RICHIESTE CONTROLLI TENDE
 def saveControls(ctrlToRun):
     ctrlToRun+="\n"
@@ -326,13 +299,6 @@ def forecastGraph():
         ds.append([fTime,pioggiaReale[i]+2,pioggiaPrevista[i]])
     return json.dumps(ds),200
 
-# ### GESTIONE COMANDO TENDE
-# @app.route('/controls', methods=['GET'])
-# @login_required
-# def controls():
-#     print("Controlli")
-#     return redirect('/static/controls.html')
-
 ### ACQUISIZIONE COMANDO TENDE
 @app.route('/awning/<ctrlToRun>', methods=['GET'])
 @login_required
@@ -361,6 +327,18 @@ def getChatbotData():
         dataList = getDataFromDB(atmoEventRequested,numSamples)        # acquisisco il valore dal DB
         resp = {"valore":dataList[0][1]}
 
+    return resp
+
+# ### GESTIONE COMANDO TENDE DA TELEGRAM
+@app.route('/controls', methods=['POST'])
+def controls():
+    awningCommand = request.values["awningCommand"]
+    if awningCommand == "up":
+        ctrlToRun = "t1-r"
+    if awningCommand == "down":
+        ctrlToRun = "t1-e"
+    saveControls(ctrlToRun)
+    resp = "Controllo ricevuto"
     return resp
 
 ### ACQUISIZIONE DATI DA RASPBERRY
